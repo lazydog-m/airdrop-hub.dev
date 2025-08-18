@@ -1,0 +1,38 @@
+{
+  "name": "airdrophub-server",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "start": "app.js",
+    "dev": "nodemon --ignore profiles/ --ignore scripts/ --ignore extensions/ app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "chrome-launcher": "^1.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "joi": "^17.13.3",
+    "morgan": "^1.10.0",
+    "mysql2": "^3.12.0",
+    "os": "^0.1.2",
+    "pg": "^8.13.3",
+    "pg-hstore": "^2.3.4",
+    "playwright": "^1.54.1",
+    "sequelize": "^6.37.5",
+    "sequelize-cli": "^6.6.2",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.53.1",
+    "@types/yup": "^0.32.0",
+    "nodemon": "^3.1.9",
+    "yup": "^1.6.1"
+  }
+}

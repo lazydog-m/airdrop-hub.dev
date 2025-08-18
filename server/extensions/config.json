@@ -1,0 +1,14 @@
+[
+  {
+    "name": "MetaMask",
+    "openOnStartup": true
+  },
+  {
+    "name": "Sui",
+    "openOnStartup": true
+  },
+  {
+    "name": "Backpack",
+    "openOnStartup": false
+  }
+]
