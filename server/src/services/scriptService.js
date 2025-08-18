@@ -9,7 +9,8 @@ const ProfileWallet = require('../models/profile_wallet');
 const sequelize = require('../configs/dbConnection');
 const config = require('../../playwrightConfig');
 const path = require('path')
-const fs = require('fs')
+const fs = require('fs');
+const { openProfileTest } = require('../utils/playwrightUtil');
 
 const scriptSchema = Joi.object({
   fileName: Joi.string()
@@ -115,7 +116,6 @@ const createScript = async (body) => {
 
   const fileContent = `
 // Generated Script ${fileName}
-// Created at: ${new Date().toISOString()}
 
 async function runScript({context, page, chrome, profile, port}) {
 ${code
@@ -152,7 +152,6 @@ const updateScript = async (body) => {
 
   const fileContent = `
 // Generated Script ${fileName}
-// Created at: ${new Date().toISOString()}
 
 async function runScript({context, page, chrome, profile, port}) {
 ${code
@@ -172,6 +171,23 @@ export { runScript, logicItems };
   fs.writeFileSync(scriptNewPath, fileContent, 'utf8');
 
   return fileName;
+}
+
+const runTestScript = async (code) => {
+  const { context, page, chrome } = await openProfileTest();
+
+  try {
+    const fn = new Function("page", "context", "chrome", `
+      return (async () => {
+        ${code}
+      })();
+    `);
+
+    await fn(page, context, chrome);
+
+  } catch (err) {
+    console.error("❌ Script lỗi:", err);
+  }
 }
 
 const deleteScript = async (fileName) => {
@@ -199,7 +215,14 @@ const validateScript = (data) => {
 };
 
 
-module.exports = { createScript, getScriptByFileName, updateScript, getAllScripts, deleteScript };
+module.exports = {
+  createScript,
+  getScriptByFileName,
+  updateScript,
+  getAllScripts,
+  deleteScript,
+  runTestScript,
+};
 
 
 

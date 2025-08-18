@@ -4,7 +4,7 @@ const RestApiException = require('../exceptions/RestApiException');
 const api = express.Router();
 const apiRes = require('../utils/apiResponse');
 const sequelize = require('../configs/dbConnection');
-const { createScript, getScriptByFileName, updateScript, getAllScripts, deleteScript } = require('../services/scriptService');
+const { createScript, getScriptByFileName, updateScript, getAllScripts, deleteScript, runTestScript } = require('../services/scriptService');
 const { openProfileTest } = require('../utils/playwrightUtil');
 
 // Get all scripts
@@ -29,7 +29,7 @@ api.get('/:fileName', async (req, res, next) => {
 
 api.get('/run-script/test', async (req, res, next) => {
   try {
-    await openProfileTest();
+    await runTestScript(req.query.code);
     return apiRes.toJson(res, null);
   } catch (error) {
     next(error);

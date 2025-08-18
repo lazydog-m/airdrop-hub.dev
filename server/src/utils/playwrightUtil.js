@@ -193,19 +193,17 @@ function closeProfileListener(browser, profileId) {
         return;
       }
 
-      if (!isSortAll) {
-        const profile = browsers.find(b => b?.profile?.id === profileId);
+      const profile = browsers.find(b => b?.profile?.id === profileId);
 
-        if (!profile) {
-          return;
-        }
-
-        usedPorts.delete(profile?.port);
-        removeBrowserById(profileId);
-
-        const socket = getSocket();
-        socket.emit('profileIdClosed', { id: profileId });
+      if (!profile) {
+        return;
       }
+
+      usedPorts.delete(profile?.port);
+      removeBrowserById(profileId);
+
+      const socket = getSocket();
+      socket.emit('profileIdClosed', { id: profileId });
     } catch (error) {
       console.error('Có lỗi khi đóng profile', error.message);
     }
@@ -271,7 +269,7 @@ async function openProfile({ profile, port, layout, activate = false }) {
     context = browser.contexts()[0];
     page = context.pages()[0] || await context.newPage();
 
-    // ko await khi mở tay profile, vì chỉ khi nó closed xong thì mới thao tác ổn định
+    // ko await khi mở tay profile tránh load lâu và khi nó closed all xong thì mới thao tác bằng tay ổn định
     closeExtensionPages(context) // chỉ await khi chạy script tránh xung đọt thao tác
 
     if (activate && getOs() === 'win32') {
@@ -285,14 +283,12 @@ async function openProfile({ profile, port, layout, activate = false }) {
     throw new RestApiException(`Mở hồ sơ thất bại: ${error.message}`);
   }
 
-
   return { context, page, chrome };
 }
 
 // test
 async function openProfileTest() {
-  const profilePath = path.join(config.PROFILE_TEST_DIR, 'profile_test');
-  const profileLayout = getLayout();
+  const profilePath = path.join(config.PROFILE_DIR, 'profile_test');
 
   if (!fs.existsSync(profilePath)) {
     fs.mkdirSync(profilePath, { recursive: true });
@@ -300,11 +296,21 @@ async function openProfileTest() {
 
   const chromeLauncher = await import('chrome-launcher');
   const chromePath = getOs() === 'win32'
-    ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+    ? 'C:\\GoogleChromePortable64\\App\\Chrome-bin\\chrome.exe' // version 138 mới có thể dùng load-extension
     : '/usr/bin/google-chrome';
 
+  const layout = {
+    x: 0,
+    y: 0,
+    width: config.SCREEN_WIDTH,
+    height: config.SCREEN_HEIGHT
+  }
+  const profileLayout = getLayout(layout);
+  const extensions = fs.readdirSync(config.EXTENSION_DIR)
+    .map(ext => path.join(config.EXTENSION_DIR, ext))
+    .filter(extPath => fs.statSync(extPath).isDirectory());
+
   const chromeFlags = [
-    // `--app=data:text/html,<html></html>`,
     `--window-position=${profileLayout.x},${profileLayout.y}`,
     `--window-size=${profileLayout.width},${profileLayout.height}`,
     '--no-default-browser-check',
@@ -315,23 +321,47 @@ async function openProfileTest() {
     `--disable-extensions-except=${extensions.join(',')}`,
   ];
 
-  if (getOs() !== 'win32') {
+  if (getOs() !== 'win32') { // linux thì sẽ dùng kiểu này nếu ko sẽ bị tạo folder sai khi dùng userDataDir
     chromeFlags.push(`--user-data-dir=${profilePath}`);
   }
 
-  const chrome = await chromeLauncher.launch({
-    port: 9221,
-    chromePath,
-    userDataDir: getOs() === 'win32' ? profilePath : undefined,
-    chromeFlags,
-  });
+  let chrome;
+  try {
+    chrome = await chromeLauncher.launch({
+      port: 9221,
+      chromePath,
+      userDataDir: getOs() === 'win32' ? profilePath : undefined, // win32 thì sẽ dùng kiểu này nếu ko sẽ bị mất cache khi sử dụng user-data-dir
+      chromeFlags,
+    });
+  } catch (error) {
+    // usedPorts.delete(port);
+    throw new RestApiException(`Mở hồ sơ test thất bại: ${error.message}`);
+  }
 
-  const browser = await chromium.connectOverCDP(`http://127.0.0.1:${chrome.port}`);
+  let context;
+  let page;
 
-  const context = browser.contexts()[0];
-  const page = context.pages()[0] || await context.newPage();
+  try {
+    const browser = await chromium.connectOverCDP(`http://127.0.0.1:${chrome.port}`);
 
-  await closeExtensionPages(context)
+    // closeProfileListener(browser, profile.id);
+
+    context = browser.contexts()[0];
+    page = context.pages()[0] || await context.newPage();
+
+    if (getOs() === 'win32') {
+      const pathNircmd = path.join(config.TOOL_DIR, 'nircmd-x64', 'nircmd.exe');
+      exec(`"${pathNircmd}" win min process /${chrome.pid}`);
+      exec(`"${pathNircmd}" win activate process /${chrome.pid}`);
+    }
+
+    // ko await khi mở tay profile tránh load lâu và khi nó closed all xong thì mới thao tác bằng tay ổn định
+    await closeExtensionPages(context) // chỉ await khi chạy script tránh xung đọt thao tác
+
+  } catch (error) {
+    // usedPorts.delete(port);
+    throw new RestApiException(`Mở hồ sơ test thất bại: ${error.message}`);
+  }
 
   return { context, page, chrome };
 }
@@ -374,7 +404,6 @@ module.exports = {
   removeBrowserById,
   currentProfiles,
   closingByApiIds,
-  setIsSortAll,
   usedPorts,
   getPortFree,
   sortGridLayout,
