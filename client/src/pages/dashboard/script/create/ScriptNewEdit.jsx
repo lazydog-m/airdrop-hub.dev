@@ -16,6 +16,7 @@ import ScriptNewEditForm from './ScriptNewEditForm';
 import useMessage from '@/hooks/useMessage';
 import { PAGE_ACTION_DATA } from './actions-form/page/PageActionData';
 import { CLICK_ACTION_DATA } from './actions-form/click/ClickActionData';
+import ScriptRunTest from './ScriptRunTest';
 
 const ScriptNewEditDetailsMemo = React.memo(ScriptNewEditDetails);
 
@@ -33,8 +34,7 @@ export default function ScriptNewEdit() {
   const { onOpen, onClose } = useSpinner();
   const { onError } = useMessage();
   const [openModal, setOpenModal] = useState(false);
-
-  console.log(data)
+  const [openModalRunTest, setOpenModalRunTest] = useState(false);
 
   const handleUpdateLogicItemsFromRes = (logicItems = []) => {
     const ACTIONS_DATA_FLAT = ACTIONS_DATA.flatMap(group => group.children);
@@ -87,10 +87,6 @@ export default function ScriptNewEdit() {
     }
   }, [fileName]) // nagivate
 
-  const handleClose = () => {
-    setOpenModal(false);
-  }
-
   const getAllCode = (logicItems) => logicItems
     ?.map(item => item.code)
     ?.join('\n\n');
@@ -110,7 +106,7 @@ export default function ScriptNewEdit() {
 
   const runScriptTest = async () => {
     const params = {
-
+      code: data.code,
     }
 
     try {
@@ -132,11 +128,22 @@ export default function ScriptNewEdit() {
     }
 
     runScriptTest();
-
   }
 
   const handleOpenModal = () => {
     setOpenModal(true);
+  }
+
+  const handleClose = () => {
+    setOpenModal(false);
+  }
+
+  const handleOpenModalRunTest = () => {
+    setOpenModalRunTest(true);
+  }
+
+  const handleCloseModalRunTest = () => {
+    setOpenModalRunTest(false);
   }
 
   return (
@@ -149,7 +156,7 @@ export default function ScriptNewEdit() {
             <ButtonOutlinePrimary
               icon={<Play />}
               title='Chạy thử'
-              onClick={handleRunTestScript}
+              onClick={handleOpenModalRunTest}
             />
             <ButtonPrimary
               icon={<Save />}
@@ -158,6 +165,20 @@ export default function ScriptNewEdit() {
             />
           </div>
         </div>
+
+        <Modal
+          size='md'
+          isOpen={openModalRunTest}
+          onClose={handleCloseModalRunTest}
+          title={"Chạy thử kịch bản"}
+          content={
+            <ScriptRunTest
+              currentScript={data}
+              onCloseModal={handleCloseModalRunTest}
+              isEdit={isEdit}
+            />
+          }
+        />
 
         <Modal
           size='md'

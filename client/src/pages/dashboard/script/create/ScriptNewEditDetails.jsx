@@ -9,7 +9,7 @@ import { Color } from "@/enums/enum";
 import { PATH_DASHBOARD } from "@/routes/path";
 import useMessage from "@/hooks/useMessage";
 import { HeaderLabel } from "@/components/HeaderSection";
-import { Globe, MousePointerClick, ShieldCheck, Text, Type, Wallet, Clock, GripVertical, Trash2, ListFilter } from "lucide-react";
+import { Globe, MousePointerClick, ShieldCheck, Text, Type, Wallet, Clock, GripVertical, Trash2, ListFilter, CopyPlus } from "lucide-react";
 import Collapse from "@/components/Collapse";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
@@ -250,11 +250,19 @@ export default function ScriptNewEditDetails({
                           >
                             <ActionLogicItem item={item} key={item.id} />
 
-                            <ButtonIcon
-                              onClick={(e) => handleRemoveLogic(e, item.id)}
-                              variant='ghost'
-                              icon={<Trash2 color={Color.DANGER} />}
-                            />
+
+                            <div className='d-flex'>
+                              <ButtonIcon
+                                // onClick={(e) => handleRemoveLogic(e, item.id)}
+                                variant='ghost'
+                                icon={<CopyPlus color={Color.MAIN} />}
+                              />
+                              <ButtonIcon
+                                onClick={(e) => handleRemoveLogic(e, item.id)}
+                                variant='ghost'
+                                icon={<Trash2 color={Color.DANGER} />}
+                              />
+                            </div>
                           </div>
                         )}
                       </Draggable>

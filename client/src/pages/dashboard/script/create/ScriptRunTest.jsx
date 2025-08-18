@@ -36,7 +36,7 @@ const SyntaxHighlighterMemo = React.memo(SyntaxHighlighterCustom);
 
 const MAX_LINE_PREVIEW = 10;
 
-export default function ScriptNewEditForm({
+export default function ScriptRunTest({
   isEdit,
   onCloseModal,
   currentScript,
