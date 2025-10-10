@@ -1,3 +1,4 @@
+import { BASE_NAME } from '@/config';
 import PropTypes from 'prop-types';
 import { forwardRef } from 'react';
 import { Helmet } from 'react-helmet-async';
@@ -6,7 +7,7 @@ const Page = forwardRef(({ children, title = '', meta, ...other }, ref) => {
   return (
     <>
       <Helmet>
-        <title>{title}</title>
+        <title>{`${title} - ${BASE_NAME}`}</title>
         {meta}
       </Helmet>
 

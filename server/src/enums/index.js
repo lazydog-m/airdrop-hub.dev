@@ -36,11 +36,16 @@ const ProjectStatus = {
   DOING: 'doing',
   END_PENDING_UPDATE: 'end_pending_update',
   SNAPSHOT: 'snapshot',
-  TGE: 'TGE',
+  TGE: 'tge',
   END_AIRDROP: 'end_airdrop',
 }
 
 const WalletStatus = {
+  IN_ACTIVE: 'in_active',
+  UN_ACTIVE: 'un_active',
+}
+
+const StatusCommon = {
   IN_ACTIVE: 'in_active',
   UN_ACTIVE: 'un_active',
 }
@@ -75,8 +80,9 @@ const TaskStatus = {
 }
 
 const TaskType = {
-  NEW_PROJECT: 'new_project',
-  NEW_TASK: 'new_task',
+  DAILY: 'daily',
+  SOCIAL: 'social',
+  REG: 'reg',
 }
 
 const TaskRank = {
@@ -108,4 +114,5 @@ module.exports = {
   TRASH_DATA_TYPE,
   CURRENT_DATA_TYPE,
   Pagination,
+  StatusCommon,
 };

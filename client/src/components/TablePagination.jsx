@@ -7,20 +7,37 @@ export default function TablePagination({
   pagination = {},
   selected = [],
   selectedObjText = '',
+  mt = '20',
+  checkbox = true,
   ...other
 }) {
 
   const { page, totalItems, totalPages, hasPre, hasNext } = pagination;
 
   return (
-    <div className='pagination d-flex justify-content-between mt-20 color-white font-inter' {...other}>
+    <div className={`pagination d-flex justify-content-between ${`mt-${mt}`} color-white font-inter`}  {...other}>
 
-      <div className='align-items-center justify-content-center d-flex fs-14 fw-400'>
-        {`Đã chọn ${selected.length || 0} trong tổng số ${totalItems || 0} ${selectedObjText}.`}
-      </div>
-      <div className='align-items-center justify-content-center d-flex fs-14 fw-400'>
-        {`Trang ${page || 0}/${totalPages || 0}`}
-      </div>
+      {checkbox &&
+        <>
+          <div className='align-items-center justify-content-center d-flex fs-14 fw-400'>
+            {`Trang ${page || 0}/${totalPages || 0} - `}
+            {`Đã chọn ${selected.length || 0} trong tổng số ${totalItems || 0} ${selectedObjText}.`}
+          </div>
+          <div className='align-items-center justify-content-center d-flex fs-14 fw-400'>
+          </div>
+        </>
+      }
+
+      {!checkbox &&
+        <>
+          <div className='align-items-center justify-content-center d-flex fs-14 fw-400'>
+            {`Trang ${page || 0}/${totalPages || 0} - `}
+            {`Tổng ${totalItems || 0} ${selectedObjText}.`}
+          </div>
+          <div className='align-items-center justify-content-center d-flex fs-14 fw-400'>
+          </div>
+        </>
+      }
 
       <div className='d-flex gap-15'>
         <ButtonOutline

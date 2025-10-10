@@ -1,3 +1,4 @@
+import { Color } from '@/enums/enum';
 import Swal from 'sweetalert2'
 
 const useConfirm = () => {
@@ -8,20 +9,23 @@ const useConfirm = () => {
     }
   });
 
-  const showConfirm = (title, api, onCancel) => {
+  const showConfirm = (title = '', api, text = '', onCancel) => {
     // document.body.style.overflowY = 'hidden';
     Swal.fire({
       title: title || "Confirm?",
+      text,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
+      confirmButtonColor: Color.PRIMARY,
       focusCancel: false,
       focusConfirm: false,
-      cancelButtonColor: "#d33",
+      cancelButtonColor: Color.ORANGE,
       confirmButtonText: "Đồng ý",
+      // width: 'auto',
       cancelButtonText: "Hủy bỏ",
+      reverseButtons: true, // This property swaps the button positions
       customClass: {
-        container: 'my-swal'
+        container: 'my-swal',
       },
     }).then((result) => {
       if (result.isConfirmed) {
@@ -31,6 +35,22 @@ const useConfirm = () => {
       }
       // document.body.style.overflowY = '';
     });
+  };
+
+  const showSaved = (title = 'Đã lưu!') => {
+    Swal.fire({
+      title: title,
+      icon: "success",
+      confirmButtonColor: Color.PRIMARY,
+      focusConfirm: false,
+      // width: 'auto',
+      // showConfirmButton: false,
+      confirmButtonText: "Xong!",
+      // timer: 5000,
+      customClass: {
+        container: 'my-swal'
+      },
+    })
   };
 
   const showConfirmCancel = (title, text, onConfirm) => {
@@ -57,6 +77,6 @@ const useConfirm = () => {
     });
   };
 
-  return { showConfirm, showConfirmCancel };
+  return { showConfirm, showConfirmCancel, showSaved };
 }
 export default useConfirm;

@@ -3,15 +3,13 @@ import { ButtonPrimary } from "@/components/Button";
 import Container from "@/components/Container";
 import { HeaderAction } from "@/components/HeaderSection";
 import Page from "@/components/Page";
-import { CirclePlus } from 'lucide-react';
+import { UserRoundPlus } from 'lucide-react';
 import Modal from '@/components/Modal';
 import { apiGet } from '@/utils/axios';
-import { WalletStatus } from '@/enums/enum';
 import useSpinner from '@/hooks/useSpinner';
 import ProfileDataTable from './ProfileDataTable';
-import ProfileNewEditForm from '../create/ProfileNewEditForm';
+import ProfileNewEditForm from '../new-edit/ProfileNewEditForm';
 import ProfileFilterSearch from './ProfileFilterSearch';
-import { convertEmailToEmailUsername } from '@/utils/convertUtil';
 import useMessage from '@/hooks/useMessage';
 import useTable from '@/hooks/useTable';
 import { delayApi } from '@/utils/commonUtil';
@@ -54,7 +52,7 @@ export default function ProfileList() {
       if (dataTrigger) {
         setData(response.data.data.data || []);
         setPagination(response.data.data.pagination || {});
-        // setOpenningIds(new Set(response.data.data.browsers));
+        setOpenningIds(new Set(response.data.data.browsers));
         onTrigger();
       }
       else {
@@ -81,17 +79,8 @@ export default function ProfileList() {
     onSelectRow(id);
   }, [selected])
 
-  const handleUpdateData = useCallback((isEdit, profileNew, onTrigger = () => { }) => {
-    if (!isEdit) {
-      fetchApi(true, onTrigger)
-    }
-    else {
-      setData((prevData) =>
-        prevData.map((profile) =>
-          profile.id === profileNew.id ? profileNew : profile
-        )
-      );
-    }
+  const handleUpdateData = useCallback((onTrigger = () => { }) => {
+    fetchApi(true, onTrigger)
   }, [search, page]);
 
   const handleDeleteData = useCallback((id, onTrigger = () => { }) => {
@@ -191,14 +180,14 @@ export default function ProfileList() {
   }, [socket]);
 
   return (
-    <Page title='Quản lý hồ sơ - AirdropHub'>
+    <Page title='Profiles'>
       <Container>
         <HeaderAction
-          heading='Danh sách hồ sơ'
+          heading='Danh sách profiles'
           action={
             <ButtonPrimary
-              icon={<CirclePlus />}
-              title='Thêm mới'
+              icon={<UserRoundPlus />}
+              title='Thêm profile'
               onClick={handleClickOpen}
             />
           }
@@ -242,7 +231,7 @@ export default function ProfileList() {
         <Modal
           isOpen={open}
           onClose={handleClose}
-          title={"Thêm mới hồ sơ"}
+          title={"Thêm mới profile"}
           content={
             <ProfileNewEditForm
               onCloseModal={handleClose}

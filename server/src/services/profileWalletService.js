@@ -4,29 +4,32 @@ const Joi = require('joi');
 const RestApiException = require('../exceptions/RestApiException');
 const { Sequelize } = require('sequelize');
 const ProfileWallet = require('../models/profile_wallet');
-const Wallet = require('../models/wallet');
 const sequelize = require('../configs/dbConnection');
-const { WalletStatus, Pagination } = require('../enums');
+const { Pagination, StatusCommon } = require('../enums');
 
 const profileWalletSchema = Joi.object({
-  wallet_address: Joi.string().required().max(1000).messages({
+  wallet_address: Joi.string().trim().required().max(1000).messages({
+    'string.base': 'Địa chỉ ví phải là chuỗi',
     'string.empty': 'Địa chỉ ví không được bỏ trống!',
     'any.required': 'Địa chỉ ví không được bỏ trống!',
     'string.max': 'Địa chỉ ví chỉ đươc phép dài tối đa 1000 ký tự!',
   }),
-  wallet_id: Joi.string().required().max(36).messages({
-    'string.empty': 'Wallet id ví không được bỏ trống!',
+  wallet_id: Joi.string().trim().required().max(36).messages({
+    'string.base': 'Wallet id phải là chuỗi',
+    'string.empty': 'Wallet id không được bỏ trống!',
     'any.required': 'Wallet id không được bỏ trống!',
     'string.max': 'Wallet id chỉ đươc phép dài tối đa 36 ký tự!',
   }),
-  profile_id: Joi.string().required().max(36).messages({
-    'string.empty': 'Profile id ví không được bỏ trống!',
+  profile_id: Joi.string().trim().required().max(36).messages({
+    'string.base': 'Profile id phải là chuỗi',
+    'string.empty': 'Profile id không được bỏ trống!',
     'any.required': 'Profile id không được bỏ trống!',
     'string.max': 'Profile id chỉ đươc phép dài tối đa 36 ký tự!',
   }),
-  secret_phrase: Joi.string().required()
+  secret_phrase: Joi.string().trim().required()
     .max(1000)
     .messages({
+      'string.base': 'Cụm từ bí mật phải là chuỗi',
       'string.empty': 'Cụm từ bí mật không được bỏ trống!',
       'any.required': 'Cụm từ bí mật không được bỏ trống!',
       'string.max': 'Cụm từ bí mật chỉ đươc phép dài tối đa 1000 ký tự!',
@@ -35,7 +38,8 @@ const profileWalletSchema = Joi.object({
 
 const getAllProfileWalletsByIdProfile = async (req) => {
 
-  const { page, search, id } = req.query;
+  const { page, search } = req.query;
+  const { profileId } = req.params;
 
   const currentPage = Number(page) || 1;
   const offset = (currentPage - 1) * Pagination.limit;
@@ -55,8 +59,8 @@ const getAllProfileWalletsByIdProfile = async (req) => {
   `;
   const data = await sequelize.query(query, {
     replacements: {
-      profileId: id,
-      status: WalletStatus.IN_ACTIVE,
+      profileId,
+      status: StatusCommon.IN_ACTIVE,
       searchQuery: `%${search}%`
     },
   });
@@ -73,8 +77,8 @@ SELECT COUNT(*) AS total
 
   const countResult = await sequelize.query(countQuery, {
     replacements: {
-      profileId: id,
-      status: WalletStatus.IN_ACTIVE,
+      profileId,
+      status: StatusCommon.IN_ACTIVE,
       searchQuery: `%${search}%`
     },
   });
@@ -113,18 +117,14 @@ const createProfileWallet = async (body) => {
   });
 
   if (profileWalletExists[0].length > 0) {
-    throw new RestApiException(`Ví ${wallet_name} đã được liên kết với hồ sơ này!`);
+    throw new RestApiException(`Ví ${wallet_name} đã tồn tại trong hồ sơ này!`);
   }
 
   const createdProfileWallet = await ProfileWallet.create({
     ...data,
   });
 
-  const result = await sequelize.query(queryAfterSave, {
-    replacements: { id: createdProfileWallet.id },
-  });
-
-  return result[0][0];
+  return createdProfileWallet;
 }
 
 const updateProfileWallet = async (body) => {
@@ -138,7 +138,7 @@ const updateProfileWallet = async (body) => {
     });
 
     if (profileWalletExists[0].length > 0) {
-      throw new RestApiException(`Ví ${wallet_name} đã được liên kết với hồ sơ này!`);
+      throw new RestApiException(`Ví ${wallet_name} đã tồn tại trong hồ sơ này!`);
     }
   }
 
@@ -154,11 +154,9 @@ const updateProfileWallet = async (body) => {
     throw new NotFoundException('Không tìm thấy địa chỉ ví này!');
   }
 
-  const result = await sequelize.query(queryAfterSave, {
-    replacements: { id: id },
-  });
+  const updatedProfileWallet = await ProfileWallet.findByPk(id);
 
-  return { ...result[0][0] };
+  return updatedProfileWallet;
 }
 
 const deleteProfileWallet = async (id) => {
@@ -186,14 +184,6 @@ const validateProfileWallet = (data) => {
 
   return value;
 };
-
-const queryAfterSave = `
-    SELECT pw.id, pw.createdAt, pw.profile_id, pw.wallet_id, pw.wallet_address, pw.secret_phrase, 
-           w.name, w.password 
-    FROM profile_wallets pw
-    JOIN wallets w ON pw.wallet_id = w.id
-    WHERE pw.id = :id
-  `;
 
 const queryProfileWalletExists = `
   SELECT pw.id FROM profile_wallets pw

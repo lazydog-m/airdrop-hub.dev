@@ -22,23 +22,29 @@ export const HeaderAction = ({ heading, action, ...other }) => {
 
   return (
     <div className='d-flex justify-content-between align-items-center' {...other}>
-      <span className='fw-700 font-inter fs-23 color-white'>{heading}</span>
+      <span className='fw-600 font-inter fs-23 color-white'>{heading}</span>
       {action}
     </div>
   )
 
 }
 
-export const HeaderBack = ({ heading, url, ...other }) => {
+export const HeaderBack = ({ heading, actions, url, ...other }) => {
 
   return (
-    <div className='d-flex align-items-center' {...other}>
-      <Link to={url}>
-        <ButtonOutline
-          icon={<ChevronLeft />}
-        />
-      </Link>
-      <span className='fw-bold ms-20 font-inter fs-23 color-white'>{heading}</span>
+    <div className='d-flex justify-content-between' {...other}>
+      <div className='d-flex align-items-center' style={{ whiteSpace: 'nowrap' }}>
+        <Link to={url}>
+          <ButtonOutline
+            icon={<ChevronLeft />}
+          />
+        </Link>
+        <span className='fw-bold ms-15 font-inter fs-23 color-white'>{heading}</span>
+      </div>
+
+      <div className='d-flex gap-10 ms-20'>
+        {actions}
+      </div>
     </div>
   )
 

@@ -2,32 +2,23 @@ import * as React from 'react';
 import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 import DataTable from '@/components/DataTable';
-import { ButtonIcon, ButtonOutline, ButtonPrimary } from '@/components/Button';
-import { Chrome, EllipsisVertical, Loader, SquarePen, Trash2, WalletIcon } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { ButtonIcon, ButtonOutlinePrimary, ButtonPrimary } from '@/components/Button';
+import { Chrome, Loader, PencilLine, UserRoundPlus, WalletIcon } from 'lucide-react';
 import { Color, NOT_AVAILABLE } from '@/enums/enum';
 import Modal from '@/components/Modal';
 import useSpinner from '@/hooks/useSpinner';
 import { apiDelete, apiGet, apiPost, apiPut } from '@/utils/axios';
 import useConfirm from '@/hooks/useConfirm';
-import useNotification from '@/hooks/useNotification';
-import SwitchStyle from '@/components/Switch';
-import ProfileNewEditForm from '../create/ProfileNewEditForm';
+import ProfileNewEditForm from '../new-edit/ProfileNewEditForm';
 import { convertEmailToEmailUsername, getMasked } from '@/utils/convertUtil';
 import ProfileWalletList from './profile-wallet/ProfileWalletList';
 import useCopy from '@/hooks/useCopy';
-import CopyButton from '@/components/CopyButton';
 import useMessage from '@/hooks/useMessage';
 import { Checkbox } from '@/components/Checkbox';
-import { Button } from '@/components/ui/button';
 
-const colunms = [
-  { header: 'Tên Hồ Sơ', align: 'left' },
-  // { header: 'Email', align: 'left' },
-  // { header: 'Mật Khẩu Email', align: 'left' },
-  { header: 'Tài Khoản - Ví', align: 'left' },
-  // { header: 'Mật Khẩu Discord', align: 'left' },
-  // { header: 'SĐT Telegram', align: 'left' },
+const columns = [
+  { header: 'Tên Profile', align: 'left' },
+  { header: 'Tài Nguyên', align: 'left' },
   { header: '', align: 'left' },
 ]
 
@@ -41,10 +32,11 @@ export default function ProfileDataTable({
   pagination,
   onSelectAllRows,
   onSelectRow,
+  selected = [],
+
   openningIds = new Set(),
   onAddOpenningId,
   onRemoveOpenningId,
-  selected = [],
   loadingIds = new Set(),
   onAddLoadingId,
   onRemoveLoadingId,
@@ -54,7 +46,7 @@ export default function ProfileDataTable({
   const [openProfileWallet, setOpenProfileWallet] = React.useState(false);
   const [profile, setProfile] = React.useState({});
   const { onOpen, onClose } = useSpinner();
-  const { showConfirm } = useConfirm();
+  const { showConfirm, showSaved } = useConfirm();
   const { copied, handleCopy } = useCopy();
   const { onSuccess, onError } = useMessage();
   const isEdit = true;
@@ -85,13 +77,13 @@ export default function ProfileDataTable({
   };
 
 
-  const handleDelete = (id) => {
-    showConfirm("Xác nhận xóa hồ sơ?", () => remove(id));
+  const handleDelete = (id, name) => {
+    showConfirm(`Xác nhận xóa profile '${name}'?`, () => remove(id));
   }
 
   const triggerRemove = () => {
-    onSuccess("Xóa hồ sơ thành công!")
     onClose();
+    showSaved("Xóa thành công!")
   }
 
   const remove = async (id) => {
@@ -145,7 +137,7 @@ export default function ProfileDataTable({
   }
 
   const rows = React.useMemo(() => {
-    return data.map((row, index) => (
+    return data.map((row) => (
       <TableRow
         className='table-row'
         key={row.id}
@@ -158,8 +150,8 @@ export default function ProfileDataTable({
           />
         </TableCell>
         <TableCell align="left">
-          <span>
-            {row.email}
+          <span className='fw-500 font-inter'>
+            {convertEmailToEmailUsername(row.email)}
           </span>
         </TableCell>
         {/*
@@ -212,22 +204,29 @@ export default function ProfileDataTable({
               </TableCell>
 */}
         <TableCell align="left">
-          <ButtonIcon
-            onClick={() => handleClickOpen(row)}
-            variant='ghost'
-            icon={<SquarePen color={Color.WARNING} />}
-          />
-          <ButtonIcon
-            onClick={() => handleClickOpenProfileWallet(row)}
-            variant='ghost'
-            icon={<WalletIcon color={Color.SECONDARY} />}
-          />
+          <div className='d-flex align-items-center'>
+            <ButtonIcon
+              onClick={() => handleClickOpen(row)}
+              variant='ghost'
+              icon={<UserRoundPlus color={Color.PRIMARY} />}
+            />
+            <ButtonIcon
+              onClick={() => handleClickOpenProfileWallet(row)}
+              variant='ghost'
+              icon={<WalletIcon color={Color.BROWN} />}
+            />
+          </div>
         </TableCell>
 
         <TableCell align="left" style={{ userSelect: '-moz-none' }}>
-          <div className='d-flex'>
+          <div className='d-flex gap-25'>
+            <ButtonIcon
+              onClick={() => handleClickOpen(row)}
+              variant='ghost'
+              icon={<PencilLine color={Color.WARNING} />}
+            />
             {openningIds.has(row.id) ?
-              <ButtonOutline
+              <ButtonOutlinePrimary
                 onClick={() => handleCloseProfile(row.id)}
                 style={{
                   // width: '80px',
@@ -253,19 +252,6 @@ export default function ProfileDataTable({
             }
           </div>
 
-          {/*
-          <ButtonIcon
-            onClick={() => handleClickOpen(row)}
-            variant='ghost'
-            icon={<SquarePen color={Color.WARNING} />}
-          />
-
-          <ButtonIcon
-            onClick={() => handleDelete(row.id)}
-            variant='ghost'
-            icon={<Trash2 color={Color.DANGER} />}
-          />
-*/}
         </TableCell>
       </TableRow >
     ))
@@ -275,7 +261,7 @@ export default function ProfileDataTable({
     <>
       <DataTableMemo
         className='mt-20'
-        colunms={colunms}
+        columns={columns}
         data={rows}
         pagination={pagination}
 
@@ -286,13 +272,13 @@ export default function ProfileDataTable({
         onSelectAllRows={onSelectAllRows}
         onChangePage={onChangePage}
 
-        selectedObjText={'hồ sơ'}
+        selectedObjText={'profile'}
       />
 
       <Modal
         isOpen={open}
         onClose={handleClose}
-        title={"Cập nhật ví"}
+        title={"Cập nhật profile"}
         content={
           <ProfileNewEditForm
             onCloseModal={handleClose}
@@ -304,13 +290,17 @@ export default function ProfileDataTable({
       />
 
       <Modal
-        // minH={'500px'}
+        // pagination table vì modal nhỏ
+        height={'715px'}
+        width={'1500px'}
         size='xl'
         isOpen={openProfileWallet}
         onClose={handleCloseProfileWallet}
-        title={"Danh sách địa chỉ ví"}
+        title={`Danh sách ví Web3 của profile '${convertEmailToEmailUsername(profile?.email)}'`}
         content={
-          <ProfileWalletList id={profile.id} />
+          <ProfileWalletList
+            profileId={profile?.id}
+          />
         }
       />
 

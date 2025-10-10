@@ -7,21 +7,31 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-export default function Select({ placeholder, onValueChange, value, items = [], convertItem, ...other }) {
+export default function Select({
+  placeholder,
+  onValueChange,
+  value,
+  items = [],
+  disabled,
+  convertItem,
+  mainClassName = 'select-main',
+  form = true,
+  ...other
+}) {
   return (
     <SelectMain
       onValueChange={onValueChange}
       value={value}
       {...other}
     >
-      <SelectTrigger className="mt-10 color-white font-inter fs-14 pointer bdr select-main">
+      <SelectTrigger className={`${form && 'mt-10'} select-none color-white font-inter fs-14 pointer bdr ${mainClassName}`}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent style={{ zIndex: 99999, borderRadius: '0rem' }} className='select-content' >
+      <SelectContent style={{ zIndex: 99999 }} className='select-content bdr mt-1' >
         <SelectGroup style={{ padding: '3px' }}>
           {items.map((item) => {
             return (
-              <SelectItem value={item} className='pointer bdr text-capitalize select-item' style={{ height: '35px' }}>
+              <SelectItem disabled={disabled} value={item} className='pointer bdr select-item' style={{ height: '35px' }}>
                 <span className="text-capitalize font-inter">
                   {convertItem ? convertItem(item) : item}
                 </span>

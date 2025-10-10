@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import { useRef } from 'react';
 // form
 import { useFormContext, Controller } from 'react-hook-form';
+import { ErrorMessage } from '../ErrorMessage';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 // antd
@@ -11,7 +12,14 @@ RHFTextarea.propTypes = {
   required: PropTypes.bool,
 };
 
-export default function RHFTextarea({ name, label, required, placeholder, ...other }) {
+export default function RHFTextarea({
+  name,
+  label,
+  required,
+  placeholder,
+  height = '120px',
+  ...other
+}) {
 
   const { control } = useFormContext();
   const textareaRef = useRef(null);
@@ -59,11 +67,11 @@ export default function RHFTextarea({ name, label, required, placeholder, ...oth
                 }, 0);
               }
             }}
-            style={{ minHeight: '120px', maxHeight: '120px' }}
+            style={{ minHeight: height, maxHeight: height }}
             {...field}
             {...other}
           />
-          {error && <span className='font-inter color-red mt-3 d-block errorColor'>{error?.message}</span>}
+          <ErrorMessage message={error?.message} />
         </>
       )}
 

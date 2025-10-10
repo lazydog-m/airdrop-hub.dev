@@ -3,11 +3,11 @@ import { ButtonPrimary } from "@/components/Button";
 import Container from "@/components/Container";
 import { HeaderAction } from "@/components/HeaderSection";
 import Page from "@/components/Page";
-import { CirclePlus } from 'lucide-react';
+import { CirclePlus, FolderPlus } from 'lucide-react';
 import ProjectFilterSearch from "./ProjectFilterSearch";
 import ProjectDataTable from './ProjectDataTable';
 import Modal from '@/components/Modal';
-import ProjectNewEditForm from '../create/ProjectNewEditForm';
+import ProjectNewEditForm from '../new-edit/ProjectNewEditForm';
 import { apiGet } from '@/utils/axios';
 import { ProjectStatus } from '@/enums/enum';
 import useSpinner from '@/hooks/useSpinner';
@@ -23,12 +23,15 @@ export default function ProjectList() {
   const [pagination, setPagination] = useState({});
   const { onOpen, onClose } = useSpinner();
   const { onError } = useMessage();
+  const sortDate = 'Ngày Làm DESC';
 
   const [search, setSearch] = useState('');
   const [selectedStatusItems, setSelectedStatusItems] = useState([ProjectStatus.DOING]);
   const [selectedTypeItems, setSelectedTypeItems] = useState([]);
-  const [selectedCostItems, setSelectedCostItems] = useState([]);
-  const [selectedOtherItems, setSelectedOtherItems] = useState([]);
+  const [selectedCheatItems, setSelectedCheatItems] = useState([]);
+  const [selectedTaskItems, setSelectedTaskItems] = useState([]);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedSortDate, setSelectedSortDate] = useState(sortDate);
 
   const {
     onSelectRow,
@@ -41,10 +44,11 @@ export default function ProjectList() {
 
   const fetchApi = async (dataTrigger = false, onTrigger = () => { }) => {
     const params = {
-      selectedCostItems,
       selectedTypeItems,
-      selectedOtherItems,
       selectedStatusItems,
+      selectedTask,
+      selectedTaskItems,
+      selectedSortDate,
       page,
       search,
     }
@@ -52,6 +56,7 @@ export default function ProjectList() {
     try {
       onOpen();
       const response = await apiGet("/projects", params);
+      console.log(response.data.data)
 
       if (dataTrigger) {
         setData(response.data.data.data || []);
@@ -82,18 +87,22 @@ export default function ProjectList() {
     onSelectRow(id);
   }, [selected])
 
-  const handleUpdateData = useCallback((isEdit, projectNew, onTrigger = () => { }) => {
-    if (!isEdit) {
-      fetchApi(true, onTrigger)
-    }
-    else {
-      setData((prevData) =>
-        prevData.map((project) =>
-          project.id === projectNew.id ? projectNew : project
-        )
-      );
-    }
-  }, [selectedStatusItems, selectedOtherItems, selectedTypeItems, selectedCostItems, search, page]);
+  const handleUpdateData = useCallback((onTrigger = () => { }) => {
+    fetchApi(true, onTrigger);
+    // setData((prevData) =>
+    //   prevData.map((project) =>
+    //     project.id === projectNew.id ? projectNew : project
+    //   )
+    // );
+  }, [
+    selectedStatusItems,
+    selectedTypeItems,
+    selectedSortDate,
+    selectedTaskItems,
+    selectedTask,
+    search,
+    page,
+  ]);
 
   const handleDeleteData = useCallback((id, onTrigger = () => { }) => {
     fetchApi(true, () => {
@@ -101,7 +110,16 @@ export default function ProjectList() {
       setSelected(newSelected);
       onTrigger();
     })
-  }, [selectedStatusItems, selectedOtherItems, selectedTypeItems, selectedCostItems, search, page, selected]);
+  }, [
+    selectedStatusItems,
+    selectedTypeItems,
+    selectedSortDate,
+    selectedTaskItems,
+    selectedTask,
+    search,
+    page,
+    selected,
+  ]);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -142,8 +160,8 @@ export default function ProjectList() {
     onChangePage(1);
   };
 
-  const handleChangeSelectedCostItems = (label, isChecked) => {
-    setSelectedCostItems((prev) => {
+  const handleChangeSelectedTaskItems = (label, isChecked) => {
+    setSelectedTaskItems((prev) => {
       if (isChecked) {
         return [...prev, label];
       } else {
@@ -153,8 +171,8 @@ export default function ProjectList() {
     onChangePage(1);
   };
 
-  const handleChangeSelectedOtherItems = (label, isChecked) => {
-    setSelectedOtherItems((prev) => {
+  const handleChangeSelectedCheatItems = (label, isChecked) => {
+    setSelectedCheatItems((prev) => {
       if (isChecked) {
         return [...prev, label];
       } else {
@@ -162,31 +180,52 @@ export default function ProjectList() {
       }
     });
     onChangePage(1);
+  };
+
+  const handleChangeSelectedSortDate = React.useCallback((selected) => {
+    setSelectedSortDate(selected);
+  }, []);
+
+  const handleChangeSelectedTask = (selected) => {
+    if (selected !== selectedTask) {
+      setSelectedTask(selected);
+      setSelectedTaskItems([]);
+      onChangePage(1);
+    }
   };
 
   const handleClearAllSelectedItems = () => {
     setSelectedTypeItems([]);
     setSelectedStatusItems([]);
-    setSelectedCostItems([]);
-    setSelectedOtherItems([]);
+    setSelectedTask(null);
+    setSelectedTaskItems([]);
+    setSelectedSortDate(sortDate);
     setSearch('');
     onChangePage(1);
   }
 
   useEffect(() => {
     fetchApi();
-  }, [selectedStatusItems, selectedOtherItems, selectedTypeItems, selectedCostItems, search, page])
+  }, [
+    selectedStatusItems,
+    selectedTypeItems,
+    selectedSortDate,
+    selectedTaskItems,
+    selectedTask,
+    search,
+    page,
+  ])
 
   return (
-    <Page title='Quản lý dự án - AirdropHub'>
+    <Page title='Dự án'>
       <Container>
 
         <HeaderAction
           heading='Danh sách dự án'
           action={
             <ButtonPrimary
-              icon={<CirclePlus />}
-              title='Thêm mới'
+              icon={<FolderPlus />}
+              title='Thêm dự án'
               onClick={handleClickOpen}
             />
           }
@@ -201,13 +240,17 @@ export default function ProjectList() {
           onChangeSelectedTypeItems={handleChangeSelectedTypeItems}
           onClearSelectedTypeItems={() => setSelectedTypeItems([])}
 
-          selectedCostItems={selectedCostItems}
-          onChangeSelectedCostItems={handleChangeSelectedCostItems}
-          onClearSelectedCostItems={() => setSelectedCostItems([])}
+          selectedTaskItems={selectedTaskItems}
+          onChangeSelectedTaskItems={handleChangeSelectedTaskItems}
+          onClearSelectedTaskItems={() => setSelectedTaskItems([])}
 
-          selectedOtherItems={selectedOtherItems}
-          onChangeSelectedOtherItems={handleChangeSelectedOtherItems}
-          onClearSelectedOtherItems={() => setSelectedOtherItems([])}
+          selectedCheatItems={selectedCheatItems}
+          onChangeSelectedCheatItems={handleChangeSelectedCheatItems}
+          onClearSelectedCheatItems={() => setSelectedCheatItems([])}
+
+          selectedTask={selectedTask}
+          onChangeSelectedTask={handleChangeSelectedTask}
+          onClearSelectedTask={() => setSelectedTask(null)}
 
           onClearAllSelectedItems={handleClearAllSelectedItems}
           search={search}
@@ -225,6 +268,9 @@ export default function ProjectList() {
           selected={selected}
           onSelectAllRows={handleSelectAllRows}
           onSelectRow={handleSelectRow}
+
+          selectedSortDate={selectedSortDate}
+          onChangeSelectedSortDate={handleChangeSelectedSortDate}
         />
 
         <Modal

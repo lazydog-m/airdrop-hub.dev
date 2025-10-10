@@ -9,47 +9,54 @@ const { Pagination } = require('../enums');
 const { openProfile, browsers, currentProfiles, closingByApiIds, delay, getPortFree, usedPorts, getBrowsers, addBrowser, removeBrowserById, sortGridLayout } = require('../utils/playwrightUtil');
 
 const profileSchema = Joi.object({
-  email: Joi.string().required().max(255).messages({
+  email: Joi.string().trim().required().max(255).messages({
+    'string.base': 'Email phải là chuỗi',
     'string.empty': 'Email không được bỏ trống!',
     'any.required': 'Email không được bỏ trống!',
     'string.max': 'Email chỉ đươc phép dài tối đa 255 ký tự!',
   }),
-  email_password: Joi.string().required()
+  email_password: Joi.string().trim().required()
     .max(255)
     .messages({
+      'string.base': 'Mật khẩu email phải là chuỗi',
       'string.empty': 'Mật khẩu email không được bỏ trống!',
       'any.required': 'Mật khẩu email không được bỏ trống!',
       'string.max': 'Mật khẩu email chỉ đươc phép dài tối đa 255 ký tự!',
     }),
-  x_username: Joi.string()
+  x_username: Joi.string().trim()
     .max(255)
     .allow('')
     .messages({
-      'string.max': 'Username X chỉ đươc phép dài tối đa 255 ký tự!',
+      'string.base': 'Username twitter phải là chuỗi',
+      'string.max': 'Username twitter chỉ đươc phép dài tối đa 255 ký tự!',
     }),
-  discord_username: Joi.string()
+  discord_username: Joi.string().trim()
     .max(255)
     .allow('')
     .messages({
+      'string.base': 'Username discord phải là chuỗi',
       'string.max': 'Username discord chỉ đươc phép dài tối đa 255 ký tự!',
     }),
-  discord_password: Joi.string()
+  discord_password: Joi.string().trim()
     .max(255)
     .allow('')
     .messages({
+      'string.base': 'Mật khẩu discord phải là chuỗi',
       'string.max': 'Mật khẩu discord chỉ đươc phép dài tối đa 255 ký tự!',
     }),
-  telegram_phone: Joi.string()
+  telegram_phone: Joi.string().trim()
     .max(10)
     .allow('')
     .messages({
+      'string.base': 'Số điện thoại telegram phải là chuỗi',
       'string.max': 'Số điện thoại telegram chỉ đươc phép dài tối đa 10 ký tự!',
     }),
-  note: Joi.string()
-    .max(65535)
+  note: Joi.string().trim()
+    .max(10000)
     .allow('')
     .messages({
-      'string.max': 'Ghi chú chỉ đươc phép dài tối đa 65,535 ký tự!',
+      'string.base': 'Ghi chú phải là chuỗi',
+      'string.max': 'Ghi chú chỉ đươc phép dài tối đa 10,000 ký tự!',
     }),
 });
 
@@ -222,9 +229,7 @@ const updateProfile = async (body) => {
 
   const updatedProfile = await Profile.findByPk(id);
 
-  return {
-    ...updatedProfile
-  };
+  return updatedProfile;
 }
 
 const deleteProfile = async (id) => {

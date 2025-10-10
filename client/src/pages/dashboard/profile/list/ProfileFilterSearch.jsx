@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
-import { CirclePlus, Grip, ListFilter, Pause, Play } from 'lucide-react';
-import { CheckboxItems } from '@/components/Checkbox';
+import { CirclePause, CirclePlay, CirclePlus, Grip, ListFilter, Pause, Play } from 'lucide-react';
 import Popover from "@/components/Popover";
-import { ButtonGhost, ButtonOutline, ButtonOutlineDanger, ButtonOutlinePrimary, ButtonOutlineTags } from '@/components/Button';
+import { ButtonGhost, ButtonOutline, ButtonOutlinePrimary, ButtonOutlineTags, ButtonPrimary } from '@/components/Button';
 import { Color, WalletStatus } from '@/enums/enum';
 import { Badge } from '@/components/ui/badge';
-import { convertWalletStatusEnumToColorHex, convertWalletStatusEnumToText } from '@/utils/convertUtil';
 import useDebounce from '@/hooks/useDebounce';
 import useSpinner from '@/hooks/useSpinner';
 import { apiGet } from '@/utils/axios';
@@ -117,8 +115,8 @@ export default function ProfileFilterSearch({
     <div className="mt-20 justify-content-between align-items-center">
       <div className="filter-search d-flex gap-10">
         <Input
-          placeholder='Tìm kiếm hồ sơ ...'
-          style={{ width: '220px' }}
+          placeholder='Tìm kiếm profiles ...'
+          style={{ width: '250px' }}
           className='custom-input'
           value={filterSearch}
           onChange={(event) => setFilterSearch(event.target.value)}
@@ -126,17 +124,17 @@ export default function ProfileFilterSearch({
 
         {selected.length > 0 &&
           <>
-            <ButtonOutlinePrimary
+            <ButtonPrimary
               style={{
                 opacity: loadingIds.size > 0 ? '0.5' : '1',
                 pointerEvents: loadingIds.size > 0 ? 'none' : '',
               }}
               onClick={handleOpenProfiles}
-              icon={<Play color={Color.PRIMARY} />}
+              icon={<Play />}
               title={'Mở'}
             />
 
-            <ButtonOutlineDanger
+            <ButtonOutlinePrimary
               style={{
                 opacity: loadingIds.size > 0 ? '0.5' : '1',
                 pointerEvents: loadingIds.size > 0 ? 'none' : '',

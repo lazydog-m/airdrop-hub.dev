@@ -1,8 +1,6 @@
-import { SOCKET_SERVER_URL } from '@/socket';
-import React, { createContext, useEffect } from 'react';
-import { io } from 'socket.io-client';
+import { socket } from '@/socket';
+import { createContext, useEffect } from 'react';
 
-export const socket = io(SOCKET_SERVER_URL);
 export const SocketContext = createContext();
 
 export const SocketProvider = ({ children }) => {

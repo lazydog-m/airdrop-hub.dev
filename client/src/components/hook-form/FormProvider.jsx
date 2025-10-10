@@ -11,10 +11,10 @@ FormProvider.propTypes = {
   layout: PropTypes.string,
 };
 
-export default function FormProvider({ children, onSubmit, methods }) {
+export default function FormProvider({ children, onSubmit, methods, ...other }) {
   return (
     <Form {...methods}>
-      <form onSubmit={onSubmit}>{children}</form>
+      <form {...other} onSubmit={onSubmit}>{children}</form>
     </Form>
   );
 }

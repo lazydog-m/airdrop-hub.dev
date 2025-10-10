@@ -5,8 +5,8 @@ const api = express.Router();
 const apiRes = require('../utils/apiResponse');
 const { getAllProfileWalletsByIdProfile, getProfileWalletById, createProfileWallet, updateProfileWallet, deleteProfileWallet } = require('../services/profileWalletService');
 
-// Get all profile wallets
-api.get('/', async (req, res, next) => {
+// Get all profile wallets by profile
+api.get('/:profileId', async (req, res, next) => {
   try {
     const profileWallets = await getAllProfileWalletsByIdProfile(req);
     return apiRes.toJson(res, profileWallets);
@@ -16,14 +16,14 @@ api.get('/', async (req, res, next) => {
 });
 
 // Get profile wallet by ID
-api.get('/:id', async (req, res, next) => {
-  try {
-    const profileWallet = await getProfileWalletById(req.params.id);
-    return apiRes.toJson(res, profileWallet);
-  } catch (error) {
-    next(error);
-  }
-});
+// api.get('/:id', async (req, res, next) => {
+//   try {
+//     const profileWallet = await getProfileWalletById(req.params.id);
+//     return apiRes.toJson(res, profileWallet);
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 // Create a new profile wallet
 api.post('/', async (req, res, next) => {

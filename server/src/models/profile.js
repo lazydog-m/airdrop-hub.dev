@@ -15,6 +15,13 @@ const Profile = db.define('profiles', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  // 1 list tk x để có thể xem được tk x cũ khi cần authen hay gì đó ??.
+  email_x: {
+    type: DataTypes.STRING,
+  },
+  email_x_password: {
+    type: DataTypes.STRING,
+  },
   x_username: {
     type: DataTypes.STRING,
   },
@@ -22,6 +29,9 @@ const Profile = db.define('profiles', {
     type: DataTypes.STRING,
   },
   discord_password: {
+    type: DataTypes.STRING,
+  },
+  telegram_username: {
     type: DataTypes.STRING,
   },
   telegram_phone: {
@@ -33,7 +43,7 @@ const Profile = db.define('profiles', {
   note: {
     type: DataTypes.TEXT,
   },
-  //status?
+  //co can status ko, hay là cần tắt các cái resource, xem lại vấn đề khi mà 1 profile có vấn đề với resource và ko làm được project này, nhưng làm được profjject khác?
 },
   {
     timestamps: true,

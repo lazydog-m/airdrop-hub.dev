@@ -1,10 +1,20 @@
+export const DAILY_TASK_TEXT = 'Task hằng ngày';
+
 export const ProjectStatus = {
   DOING: 'doing',
   END_PENDING_UPDATE: 'end_pending_update',
   SNAPSHOT: 'snapshot',
-  TGE: 'TGE',
+  TGE: 'tge',
   END_AIRDROP: 'end_airdrop',
 }
+
+export const PROJECT_STATUS_ARR = [
+  ProjectStatus.DOING,
+  ProjectStatus.END_PENDING_UPDATE,
+  ProjectStatus.SNAPSHOT,
+  ProjectStatus.TGE,
+  ProjectStatus.END_AIRDROP
+]
 
 export const ProjectCost = {
   FREE: 'free',
@@ -21,6 +31,16 @@ export const ProjectType = {
   GAME: 'game',
 }
 
+export const PROJECT_TYPE_ARR = [
+  ProjectType.WEB,
+  ProjectType.TESTNET,
+  ProjectType.DEPIN,
+  ProjectType.RETROACTIVE,
+  ProjectType.GAME,
+  // ProjectType.GALXE,
+]
+
+
 export const Color = {
   SUCCESS: '#22C55E',
   DANGER: '#fd5c63',
@@ -36,6 +56,11 @@ export const Color = {
 }
 
 export const WalletStatus = {
+  IN_ACTIVE: 'in_active',
+  UN_ACTIVE: 'un_active',
+}
+
+export const StatusCommon = {
   IN_ACTIVE: 'in_active',
   UN_ACTIVE: 'un_active',
 }
@@ -70,7 +95,11 @@ export const TaskRank = {
   LOW: 'low',
 }
 
+export const DELAY_TIME_SCRIPT = 5000;
 export const SIZE_ICON_ACTION = '18px';
-export const TIMEOUT_SCRIPT = 5000;
-export const TIMEOUT_DIVIDE_INTO_SECOND = 1000;
+export const TIMEOUT_SCRIPT = 30000;
+export const TIMEOUT_DIVIDE = 1000;
 export const STEP_DEFAULT_TIMEOUT = 1000;
+
+export const ERROR_MESSAGE = 'Error';
+export const SUCCESS_MESSAGE = 'Success';

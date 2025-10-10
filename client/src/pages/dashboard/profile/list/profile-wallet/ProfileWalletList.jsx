@@ -1,23 +1,19 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ButtonPrimary } from "@/components/Button";
-import Container from "@/components/Container";
-import { HeaderAction } from "@/components/HeaderSection";
-import Page from "@/components/Page";
-import { CirclePlus } from 'lucide-react';
+import { CirclePlus, Plus } from 'lucide-react';
 import Modal from '@/components/Modal';
 import { apiGet } from '@/utils/axios';
-import { WalletStatus } from '@/enums/enum';
 import useSpinner from '@/hooks/useSpinner';
 import ProfileWalletFilterSearch from './ProfileWalletFilterSearch';
 import ProfileWalletDataTable from './ProfileWalletDataTable';
-import ProfileWalletNewEditForm from '../../create/ProfileWalletNewEditForm';
+import ProfileWalletNewEditForm from '../../new-edit/ProfileWalletNewEditForm';
 import useMessage from '@/hooks/useMessage';
 import useTable from '@/hooks/useTable';
 import { delayApi } from '@/utils/commonUtil';
 
 const ProfileWalletDataTableMemo = React.memo(ProfileWalletDataTable);
 
-export default function ProfileWalletList({ id }) {
+export default function ProfileWalletList({ profileId = '' }) {
   const [open, setOpen] = useState(false);
   const [data, setData] = useState([]);
   const [pagination, setPagination] = useState({});
@@ -37,14 +33,13 @@ export default function ProfileWalletList({ id }) {
 
   const fetchApi = async (dataTrigger = false, onTrigger = () => { }) => {
     const params = {
-      id,
       search,
       page,
     }
 
     try {
       onOpen();
-      const response = await apiGet("/profile-wallets", params);
+      const response = await apiGet(`/profile-wallets/${profileId}`, params);
       if (dataTrigger) {
         setData(response.data.data.data || []);
         setPagination(response.data.data.pagination || {});
@@ -73,17 +68,8 @@ export default function ProfileWalletList({ id }) {
     onSelectRow(id);
   }, [selected])
 
-  const handleUpdateData = useCallback((isEdit, profileWalletNew, onTrigger = () => { }) => {
-    if (!isEdit) {
-      fetchApi(true, onTrigger)
-    }
-    else {
-      setData((prevData) =>
-        prevData.map((profileWallet) =>
-          profileWallet.id === profileWalletNew.id ? profileWalletNew : profileWallet
-        )
-      );
-    }
+  const handleUpdateData = useCallback((onTrigger = () => { }) => {
+    fetchApi(true, onTrigger)
   }, [search, page]);
 
   const handleDeleteData = useCallback((id, onTrigger = () => { }) => {
@@ -121,12 +107,12 @@ export default function ProfileWalletList({ id }) {
   }, [search, page])
 
   return (
-    <div style={{ maxHeight: '600px', minHeight: '600px', minWidth: '1365px', maxWidth: '1365px', overflow: 'hidden', padding: '1px' }}>
+    <div>
       <ProfileWalletFilterSearch
         action={
           <ButtonPrimary
-            icon={<CirclePlus />}
-            title='Thêm mới'
+            icon={<Plus strokeWidth={2.5} />}
+            title='Thêm ví Web3'
             onClick={handleClickOpen}
           />
         }
@@ -152,10 +138,10 @@ export default function ProfileWalletList({ id }) {
         size='sm'
         isOpen={open}
         onClose={handleClose}
-        title={"Thêm mới địa chỉ ví"}
+        title={"Thêm ví Web3 vào profile"}
         content={
           <ProfileWalletNewEditForm
-            profileId={id}
+            profileId={profileId}
             onCloseModal={handleClose}
             onUpdateData={handleUpdateData}
           />

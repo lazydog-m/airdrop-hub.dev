@@ -1,4 +1,3 @@
-import React, { useEffect, useState, useRef } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableContainer from '@mui/material/TableContainer';
@@ -8,9 +7,13 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { Checkbox } from './Checkbox';
 import TablePagination from './TablePagination';
+import Popover from './Popover';
+import { DropdownMenu } from './DropdownMenu';
+import { Check, ChevronsUpDown, Inbox } from 'lucide-react';
+import EmptyData from './EmptyData';
 
 export default function DataTable({
-  colunms,
+  columns = [],
 
   data = [],
   pagination = {},
@@ -50,16 +53,51 @@ export default function DataTable({
                   indeterminate={isIndeterminate}
                 />
               </TableCell>
-              {colunms.map((item) => {
+              {columns?.map((item) => {
                 return (
                   <TableCell
                     // width={item.width}
                     key={item.header}
                     align={item.align}
                   >
-                    <span className='fw-bold font-inter' style={item.style}>
-                      {item.header}
-                    </span>
+                    {item.selected ?
+                      <Popover
+                        mt='mt-7'
+                        trigger={
+                          <span className='pointer d-flex align-items-center gap-6 fw-bold font-inter text-capitalize table-header-action'>
+                            {item.header}
+                            <ChevronsUpDown size={'17px'} />
+                          </span>
+                        }
+                        content={
+                          <DropdownMenu
+                            minW={item.minW}
+                            items={item?.options?.map((option, index) => {
+                              return {
+                                active: option.name === item.selected,
+                                onClick: () => item.onChange(option.name),
+                                title: <span
+                                  key={index}
+                                  className='fw-400 fs-13 d-flex gap-25'
+                                >
+                                  <span className='d-flex gap-10'>
+                                    {option.icon}
+                                    {option.name}
+                                  </span>
+                                  <span>
+                                    {option.name === item.selected && <Check size={'16px'} color='#a1a1a1' />}
+                                  </span>
+                                </span>
+                              }
+                            })}
+                          />
+                        }
+                      />
+                      :
+                      <span className='fw-bold font-inter text-capitalize'>
+                        {item.header}
+                      </span>
+                    }
                   </TableCell>
                 )
               })}
@@ -68,10 +106,8 @@ export default function DataTable({
           <TableBody>
             {data?.length > 0 ? data :
               <TableRow>
-                <TableCell colSpan={8}>
-                  <div className='font-inter color-white text-center' style={{ padding: '30px' }}>
-                    Chưa có dữ liệu.
-                  </div>
+                <TableCell colSpan={columns?.length + 1}>
+                  <EmptyData />
                 </TableCell>
               </TableRow>
             }

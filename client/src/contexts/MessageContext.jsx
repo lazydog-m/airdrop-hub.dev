@@ -1,6 +1,5 @@
 import { Color } from '@/enums/enum';
-import useMessage from '@/hooks/useMessage';
-import { message } from 'antd';
+import { message, notification } from 'antd';
 import { CheckSquare, CircleCheck, CircleX } from 'lucide-react';
 import PropTypes from 'prop-types';
 import { createContext } from 'react';
@@ -18,23 +17,58 @@ MessageProvider.propTypes = {
 
 function MessageProvider({ children }) {
 
-  const [messageApi, contextHolder] = message.useMessage();
+  // const [messageApi, contextHolder] = message.useMessage();
+  const [messageApi, contextHolder] = notification.useNotification();
 
-  const success = (message) => {
+  const success = (message = '', desc = null) => {
     messageApi.open({
       type: 'success',
-      content: message,
-      duration: 5,
-      icon: <CircleCheck size={'16px'} className='me-5' />,
+      message,
+      description: desc,
+      showProgress: true,
+      pauseOnHover: false,
+      style: {
+        height: !desc ? '65px' : '',
+        zIndex: 10000,
+      },
     });
   };
 
-  const error = (message) => {
+  // const success = (message) => {
+  //   messageApi.open({
+  //     type: 'success',
+  //     content: message,
+  //     duration: 5,
+  //     icon: <CircleCheck size={'16px'} className='me-5' />,
+  //     style: {
+  //       zIndex: 10000,
+  //     }
+  //   });
+  // };
+
+  // const error = (message) => {
+  //   messageApi.open({
+  //     type: 'error',
+  //     content: message,
+  //     duration: 5,
+  //     icon: <CircleX size={'16px'} className='me-5' />,
+  //     style: {
+  //       zIndex: 10000,
+  //     }
+  //   });
+  // };
+
+  const error = (message = '', desc = null) => {
     messageApi.open({
       type: 'error',
-      content: message,
-      duration: 5,
-      icon: <CircleX size={'16px'} className='me-5' />,
+      message,
+      description: desc,
+      showProgress: true,
+      pauseOnHover: false,
+      style: {
+        height: !desc ? '65px' : '',
+        zIndex: 10000,
+      },
     });
   };
 

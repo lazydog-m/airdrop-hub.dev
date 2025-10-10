@@ -3,27 +3,20 @@ import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 import DataTable from '@/components/DataTable';
 import { ButtonIcon } from '@/components/Button';
-import { convertWalletStatusEnumToReverse, convertWalletStatusEnumToTextReverse, shortenAddress } from '@/utils/convertUtil';
-import { Copy, SquarePen, Trash2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Color, NOT_AVAILABLE, WalletStatus } from '@/enums/enum';
+import { shortenAddress } from '@/utils/convertUtil';
+import { PencilLine } from 'lucide-react';
+import { Color } from '@/enums/enum';
 import Modal from '@/components/Modal';
-import useSpinner from '@/hooks/useSpinner';
-import { apiDelete, apiPut } from '@/utils/axios';
-import useConfirm from '@/hooks/useConfirm';
-import useNotification from '@/hooks/useNotification';
-import SwitchStyle from '@/components/Switch';
-import ProfileWalletNewEditForm from '../../create/ProfileWalletNewEditForm';
+import ProfileWalletNewEditForm from '../../new-edit/ProfileWalletNewEditForm';
 import CopyButton from '@/components/CopyButton';
 import useCopy from '@/hooks/useCopy';
-import useMessage from '@/hooks/useMessage';
 import { Checkbox } from '@/components/Checkbox';
 
-const colunms = [
-  { header: 'Ví', align: 'left' },
+const columns = [
+  { header: 'Tên Ví', align: 'left' },
   { header: 'Địa Chỉ Ví', align: 'left' },
   { header: 'Mật Khẩu Ví', align: 'left' },
-  { header: 'Cụm Từ Bí Mật', align: 'left' },
+  { header: 'Secret Phrase', align: 'left' },
   { header: '', align: 'left' },
 ]
 
@@ -32,7 +25,6 @@ const DataTableMemo = React.memo(DataTable);
 export default function ProfileWalletDataTable({
   data = [],
   onUpdateData,
-  onDeleteData,
   onChangePage,
   pagination,
   onSelectAllRows,
@@ -41,17 +33,11 @@ export default function ProfileWalletDataTable({
 }) {
   const [open, setOpen] = React.useState(false);
   const [profileWallet, setProfileWallet] = React.useState({});
-  const { onOpen, onClose } = useSpinner();
-  const { showConfirm } = useConfirm();
   const { copied, handleCopy } = useCopy();
-  const { onSuccess, onError } = useMessage();
   const isEdit = true;
 
   const handleCopyText = (id, text, type) => {
-    navigator.clipboard.writeText(text).then(() => {
-      handleCopy(id, type);
-      onSuccess('Đã copy!');
-    });
+    handleCopy(id, type, text);
   }
 
   const handleClickOpen = (item) => {
@@ -64,7 +50,7 @@ export default function ProfileWalletDataTable({
   };
 
   const rows = React.useMemo(() => {
-    return data.map((row, index) => (
+    return data.map((row) => (
       <TableRow
         className='table-row'
         key={row.id}
@@ -89,6 +75,7 @@ export default function ProfileWalletDataTable({
         <TableCell align="left">
           <CopyButton
             text={row.password}
+            textTooLong
             copied={copied.id === row.id && copied.type === PASSWORD_TYPE}
             onCopy={(copied.id !== row.id || copied.type !== PASSWORD_TYPE) ? () => handleCopyText(row.id, row.password, PASSWORD_TYPE) : () => { }}
           />
@@ -105,7 +92,7 @@ export default function ProfileWalletDataTable({
           <ButtonIcon
             onClick={() => handleClickOpen(row)}
             variant='ghost'
-            icon={<SquarePen color={Color.WARNING} />}
+            icon={<PencilLine color={Color.WARNING} />}
           />
         </TableCell>
       </TableRow >
@@ -117,7 +104,7 @@ export default function ProfileWalletDataTable({
       <DataTableMemo
         maxHeight={499}
         className='mt-20'
-        colunms={colunms}
+        columns={columns}
         data={rows}
         pagination={pagination}
 
@@ -128,14 +115,14 @@ export default function ProfileWalletDataTable({
         onSelectAllRows={onSelectAllRows}
         onChangePage={onChangePage}
 
-        selectedObjText={'hồ sơ'}
+        selectedObjText={'ví'}
       />
 
       <Modal
         size='sm'
         isOpen={open}
         onClose={handleClose}
-        title={"Cập nhật địa chỉ ví"}
+        title={"Cập nhật ví Web3 của hồ sơ"}
         content={
           <ProfileWalletNewEditForm
             onCloseModal={handleClose}

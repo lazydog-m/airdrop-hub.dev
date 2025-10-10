@@ -3,24 +3,25 @@ const ValidationException = require('../exceptions/ValidationException');
 const Joi = require('joi');
 const { Op, Sequelize } = require('sequelize');
 const Wallet = require('../models/wallet');
-const { WalletStatus, TRASH_DATA_TYPE, Pagination } = require('../enums');
+const { Pagination, StatusCommon } = require('../enums');
 const RestApiException = require('../exceptions/RestApiException');
-const ProfileWallet = require('../models/profile_wallet');
 const sequelize = require('../configs/dbConnection');
 
 const walletSchema = Joi.object({
-  name: Joi.string().required().max(255).messages({
+  name: Joi.string().trim().required().max(255).messages({
+    'string.base': 'Tên ví phải là chuỗi',
     'string.empty': 'Tên ví không được bỏ trống!',
     'any.required': 'Tên ví không được bỏ trống!',
     'string.max': 'Tên ví chỉ đươc phép dài tối đa 255 ký tự!',
   }),
-  password: Joi.string().required().max(255).messages({
+  password: Joi.string().trim().required().max(255).messages({
+    'string.base': 'Mật khẩu ví phải là chuỗi',
     'string.empty': 'Mật khẩu ví không được bỏ trống!',
     'any.required': 'Mật khẩu ví không được bỏ trống!',
     'string.max': 'Mật khẩu ví chỉ đươc phép dài tối đa 255 ký tự!',
   }),
   status: Joi
-    .valid(WalletStatus.UN_ACTIVE, WalletStatus.IN_ACTIVE)
+    .valid(StatusCommon.UN_ACTIVE, StatusCommon.IN_ACTIVE)
     .messages({
       'any.only': 'Trạng thái ví không hợp lệ!'
     }),
@@ -28,11 +29,10 @@ const walletSchema = Joi.object({
 
 const walletStatusValidation = Joi.object({
   status: Joi.required()
-    .valid(WalletStatus.UN_ACTIVE, WalletStatus.IN_ACTIVE)
+    .valid(StatusCommon.UN_ACTIVE, StatusCommon.IN_ACTIVE)
     .messages({
       'any.only': 'Trạng thái ví không hợp lệ!',
-      'string.empty': 'Trạng thái ví không được bỏ trống!',
-      'any.only': 'Trạng thái ví không hợp lệ!'
+      'any.required': 'Trạng thái ví không được bỏ trống!',
     }),
 });
 
@@ -40,6 +40,7 @@ const getAllWalletsNoPage = async (req) => {
   const query = `
     SELECT *
     FROM wallets w
+    WHERE w.deletedAt IS NULL AND w.status IN ('${StatusCommon.IN_ACTIVE}')
     ORDER BY w.createdAt DESC
   `;
   const data = await sequelize.query(query);
@@ -48,7 +49,7 @@ const getAllWalletsNoPage = async (req) => {
 }
 
 const getAllWallets = async (req) => {
-  const { selectedStatusItems, dataType, page, search } = req.query;
+  const { selectedStatusItems, page, search } = req.query;
 
   const currentPage = Number(page) || 1;
   const offset = (currentPage - 1) * Pagination.limit;
@@ -68,32 +69,20 @@ const getAllWallets = async (req) => {
     replacements.push(...selectedStatusItems);
   }
 
-  // if (dataType === TRASH_DATA_TYPE) {
-  //   const data = await Wallet.findAll({
-  //     where: {
-  //       deletedAt: {
-  //         [Op.not]: null
-  //       }
-  //     },
-  //     order: [['deletedAt', 'DESC']],
-  //   });
-  //   return data;
-  // }
-
   if (conditions.length > 0) {
     whereClause += ' AND ' + conditions.join(' AND ');
   }
 
   const query = `
     SELECT
-    w.id, w.createdAt, pw_min.wallet_id, 
+    w.id, w.createdAt, pw.count, 
        w.name, w.password, w.status
     FROM wallets w
     LEFT JOIN (
-    SELECT wallet_id, MIN(id) AS min_id
+    SELECT wallet_id, COUNT(id) AS count
     FROM profile_wallets
     GROUP BY wallet_id
-    ) pw_min ON pw_min.wallet_id = w.id
+    ) pw ON pw.wallet_id = w.id
     ${whereClause} 
     ORDER BY w.createdAt DESC
     LIMIT ${Pagination.limit} OFFSET ${offset}
@@ -103,13 +92,13 @@ const getAllWallets = async (req) => {
   });
 
   const countQuery = `
-SELECT COUNT(*) AS total 
+    SELECT COUNT(*) AS total 
     FROM wallets w
     LEFT JOIN (
-    SELECT wallet_id, MIN(id) AS min_id
+    SELECT wallet_id, COUNT(id) AS count
     FROM profile_wallets
     GROUP BY wallet_id
-    ) pw_min ON pw_min.wallet_id = w.id
+    ) pw ON pw.wallet_id = w.id
     ${whereClause} 
 `;
 
@@ -146,47 +135,32 @@ const createWallet = async (body) => {
 
   const data = validateWallet(body);
 
-  const existingWallet = await Wallet.findOne({ where: { name: data.name } });
-  if (existingWallet) {
-    throw new RestApiException('Tên ví đã tồn tại!');
-  }
+  // const existingWallet = await Wallet.findOne({ where: { name: data.name } });
+  // if (existingWallet) {
+  //   throw new RestApiException('Tên ví đã tồn tại!');
+  // }
 
   const createdWallet = await Wallet.create({
     ...data,
   });
 
-  const query = `
-    select w.id, w.createdat, pw_min.wallet_id, 
-       w.name, w.password, w.status
-    from wallets w
-    left join (
-    select wallet_id, min(id) as min_id
-    from profile_wallets
-    group by wallet_id
-    ) pw_min on pw_min.wallet_id = w.id
-    where w.id = :id
-  `;
-  const result = await sequelize.query(query, {
-    replacements: { id: createdWallet.id },
-  });
-
-  return result[0][0];
+  return createdWallet;
 }
 
 const updateWallet = async (body) => {
   const { id } = body;
   const data = validateWallet(body);
 
-  const existingWallet = await Wallet.findOne({
-    where: {
-      name: data.name,
-      id: { [Op.ne]: id }
-    }
-  });
-
-  if (existingWallet) {
-    throw new RestApiException('Tên ví đã tồn tại!');
-  }
+  // const existingWallet = await Wallet.findOne({
+  //   where: {
+  //     name: data.name,
+  //     id: { [Op.ne]: id }
+  //   }
+  // });
+  //
+  // if (existingWallet) {
+  //   throw new RestApiException('Tên ví đã tồn tại!');
+  // }
 
   const [updatedCount] = await Wallet.update({
     ...data,
@@ -200,30 +174,17 @@ const updateWallet = async (body) => {
     throw new NotFoundException('Không tìm thấy ví này!');
   }
 
-  const query = `
-    SELECT w.id, w.createdAt, pw_min.wallet_id, 
-       w.name, w.password, w.status
-    FROM wallets w
-    LEFT JOIN (
-    SELECT wallet_id, MIN(id) AS min_id
-    FROM profile_wallets
-    GROUP BY wallet_id
-    ) pw_min ON pw_min.wallet_id = w.id
-    WHERE w.id = :id
-  `;
-  const result = await sequelize.query(query, {
-    replacements: { id: id },
-  });
+  const updatedWallet = await Wallet.findByPk(id);
 
-  return { ...result[0][0] };
+  return updatedWallet;
 }
 
 const updateWalletStatus = async (body) => {
-  const { id, status } = body;
-  validateWalletStatus(body);
+  const { id } = body;
+  const data = validateWalletStatus(body);
 
   const [updatedCount] = await Wallet.update({
-    status: status,
+    status: data.status,
   }, {
     where: {
       id: id,
@@ -234,22 +195,9 @@ const updateWalletStatus = async (body) => {
     throw new NotFoundException('Không tìm thấy ví này!');
   }
 
-  const query = `
-    SELECT w.id, w.createdAt, pw_min.wallet_id, 
-       w.name, w.password, w.status
-    FROM wallets w
-    LEFT JOIN (
-    SELECT wallet_id, MIN(id) AS min_id
-    FROM profile_wallets
-    GROUP BY wallet_id
-    ) pw_min ON pw_min.wallet_id = w.id
-    WHERE w.id = :id
-  `;
-  const result = await sequelize.query(query, {
-    replacements: { id: id },
-  });
+  const updatedWallet = await Wallet.findByPk(id);
 
-  return { ...result[0][0] };
+  return updatedWallet;
 }
 
 const deleteWallet = async (id) => {

@@ -36,8 +36,10 @@ const getPortFree = () => {
 
 const closingByApiIds = new Set();
 
-let isSortAll = false;
-const setIsSortAll = (value) => { isSortAll = value; };
+let isStop = false;
+const setIsStop = (value) => { isStop = value; };
+let lastUrl = false;
+const setIsSortAll = (value) => { lastUrl = value; };
 
 // chạy sript tối đa 21 profile 1 luồng
 function createGridLayoutScript(profileCount) {
@@ -132,7 +134,7 @@ function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function closeExtensionPages(context) {
+async function closeExtensionPages(context, browser) {
   const extConfig = JSON.parse(fs.readFileSync(path.join(config.EXTENSION_DIR, 'config.json'), 'utf8'));
 
   const startupExts = extConfig
@@ -141,46 +143,52 @@ async function closeExtensionPages(context) {
   let closedExtCount = 0;
   let startupExtTotal = startupExts.length;
 
-  return new Promise((resolve) => {
+  return new Promise(async (resolve, reject) => {
+    browser?.on('disconnected', () => {
+      reject(new RestApiException('Chưa sẵn sàng chạy kịch bản!'));
+    });
+
     if (startupExtTotal === 0) {
       resolve(true);
       return;
     }
 
     context.on('page', async (page) => {
-      // Các page ext (của các ví như metamask, sui...) sẽ được mở bởi các case sau:
-      // 1. Chạy profile với 'load-extension' (tùy ví).
-      // 2. Do click vào ext ví trên toolbar nếu như ví chưa login ví (tùy ví).
-      // 3. Connect ví trong các dApp airdrop sẽ mở popup page ext.
+      page.on('framenavigated', async (frame) => {
+        // Các page ext (của các ví như metamask, sui...) sẽ được mở bởi các case sau:
+        // 1. Chạy profile với 'load-extension' (tùy ví).
+        // 2. Do click vào ext ví trên toolbar nếu như ví chưa login ví (tùy ví).
+        // 3. Connect ví trong các dApp airdrop sẽ mở popup page ext.
 
-      // Khi 1 page mới được mở, dù có điều hướng đến trang nào đó thì Url của page đó vẫn
-      // là blank. Vì nó nhận Url sau khi page mới được mở chứ ko đợi điều hướng đến trang
-      // cụ thể rồi mới nhận Url. Ngay cả khi dùng newPage.goto() thì trươc đó newPage
-      // cũng đã được mở từ context rồi mới điều hướng trang nên Url cũng sẽ là blank.
+        // Khi 1 page mới được mở, dù có điều hướng đến trang nào đó thì Url của page đó vẫn
+        // là blank. Vì nó nhận Url sau khi page mới được mở chứ ko đợi điều hướng đến trang
+        // cụ thể rồi mới nhận Url. Ngay cả khi dùng newPage.goto() thì trươc đó newPage
+        // cũng đã được mở từ context rồi mới điều hướng trang nên Url cũng sẽ là blank.
 
-      // page.on('framenavigated', async (frame) => {})
-      // Đợi page mới mở điều hướng đến trang đích rồi mới nhận Url
-      // Các page ext ví được mở bởi các case trên sẽ giống như kiểu framenavigated
+        // page.on('framenavigated', async (frame) => {})
+        // Đợi page mới mở điều hướng đến trang đích rồi mới nhận Url => phù hợp các case
+        // Các page ext ví được mở bởi các case trên sẽ giống như kiểu framenavigated
 
-      const url = page.url();
+        const url = frame.url();
 
-      if (closedExtCount >= startupExtTotal) {
-        // closed đủ số ext cần close rồi thì thôi
-        return;
-      }
-
-      if (url.startsWith('chrome-extension://')) {
-        try {
-          await page.close();
-          closedExtCount++; // case bi thieu count se ko done dc loading (mo cung luc se bi)
-
-          if (closedExtCount >= startupExtTotal) {
-            resolve(true);
-          }
-        } catch (err) {
-          console.error(`Lỗi đóng ext:`, err);
+        if (closedExtCount >= startupExtTotal) {
+          // closed đủ số ext cần close rồi thì thôi
+          return;
         }
-      }
+
+        if (url.startsWith('chrome-extension://')) {
+          try {
+            await page.close();
+            closedExtCount++; // case bi thieu count se ko done dc loading (mo cung luc se bi)
+
+            if (closedExtCount >= startupExtTotal) { //  chẳng may đóng ko đủ thì bị treo api
+              resolve(true);
+            }
+          } catch (err) {
+            console.error(`Lỗi đóng page exception:`, err);
+          }
+        }
+      })
     });
   });
 }
@@ -205,14 +213,14 @@ function closeProfileListener(browser, profileId) {
       const socket = getSocket();
       socket.emit('profileIdClosed', { id: profileId });
     } catch (error) {
-      console.error('Có lỗi khi đóng profile', error.message);
+      console.error('Có lỗi khi đóng hồ sơ', error.message);
     }
   });
 }
 
 const getOs = () => process.platform;
 
-async function openProfile({ profile, port, layout, activate = false }) {
+async function openProfile({ profile, port, layout, activate = false, runScript = false }) {
   const profilePath = path.join(config.PROFILE_DIR, profile.name);
 
   if (!fs.existsSync(profilePath)) {
@@ -221,7 +229,7 @@ async function openProfile({ profile, port, layout, activate = false }) {
 
   const chromeLauncher = await import('chrome-launcher');
   const chromePath = getOs() === 'win32'
-    ? 'C:\\GoogleChromePortable64\\App\\Chrome-bin\\chrome.exe' // version 138 mới có thể dùng load-extension
+    ? 'C:\\GoogleChromePortable64\\App\\Chrome-bin\\chrome.exe' // version 138 mới có thể dùng load-extension (change dir)
     : '/usr/bin/google-chrome';
 
   const profileLayout = getLayout(layout);
@@ -245,7 +253,11 @@ async function openProfile({ profile, port, layout, activate = false }) {
     chromeFlags.push(`--user-data-dir=${profilePath}`);
   }
 
+  // trong quá trình khởi chạy chrome (loading api mở profile) có thể gặp các lỗi liên quan đến connect và browser
+
+  // có thể bị lỗi 'connect' khi close nhanh bằng X trong lúc đang khởi chạy nhưng chưa hoàn tất các thành phần => launcher failed => bị treo api 1 lúc
   let chrome;
+
   try {
     chrome = await chromeLauncher.launch({
       port,
@@ -262,15 +274,25 @@ async function openProfile({ profile, port, layout, activate = false }) {
   let page;
 
   try {
+    // có thể bị lỗi 'connect' khi close nhanh bằng X trong lúc đang connect CDP
+    // xảy ra khi chrome chưa hoàn tất CDP (tức launcher thành công và đầy đủ nhưng chưa done CDP)
     const browser = await chromium.connectOverCDP(`http://127.0.0.1:${chrome.port}`);
 
     closeProfileListener(browser, profile.id);
 
     context = browser.contexts()[0];
+
+    // có thể bị lỗi 'newPage || open new tab' khi close nhanh bằng X trong lúc đang gọi page từ context
+    // xảy ra khi context đã bị detach do browser bị disconnect
     page = context.pages()[0] || await context.newPage();
 
-    // ko await khi mở tay profile tránh load lâu và khi nó closed all xong thì mới thao tác bằng tay ổn định
-    closeExtensionPages(context) // chỉ await khi chạy script tránh xung đọt thao tác
+    // ko await khi mở tay profile tránh load lâu api
+    if (runScript) {
+      await closeExtensionPages(context) // chỉ await khi chạy script tránh xung đọt thao tác
+    }
+    else {
+      closeExtensionPages(context)
+    }
 
     if (activate && getOs() === 'win32') {
       const pathNircmd = path.join(config.TOOL_DIR, 'nircmd-x64', 'nircmd.exe');
@@ -286,8 +308,16 @@ async function openProfile({ profile, port, layout, activate = false }) {
   return { context, page, chrome };
 }
 
+let browserTest = {};
+
+const setBrowserTest = (br) => {
+  browserTest = br;
+};
+
+const getBrowserTest = () => browserTest;
+
 // test
-async function openProfileTest() {
+async function openProfileTest({ runScript = false }) {
   const profilePath = path.join(config.PROFILE_DIR, 'profile_test');
 
   if (!fs.existsSync(profilePath)) {
@@ -296,16 +326,16 @@ async function openProfileTest() {
 
   const chromeLauncher = await import('chrome-launcher');
   const chromePath = getOs() === 'win32'
-    ? 'C:\\GoogleChromePortable64\\App\\Chrome-bin\\chrome.exe' // version 138 mới có thể dùng load-extension
+    ? 'C:\\GoogleChromePortable64\\App\\Chrome-bin\\chrome.exe' // version 138 mới có thể dùng load-extension (change dir)
     : '/usr/bin/google-chrome';
 
-  const layout = {
-    x: 0,
-    y: 0,
-    width: config.SCREEN_WIDTH,
-    height: config.SCREEN_HEIGHT
-  }
-  const profileLayout = getLayout(layout);
+  // const defaultLayout = {
+  //   x: 0,
+  //   y: 0,
+  //   width: config.SCREEN_WIDTH,
+  //   height: config.SCREEN_HEIGHT
+  // }
+  const profileLayout = getLayout();
   const extensions = fs.readdirSync(config.EXTENSION_DIR)
     .map(ext => path.join(config.EXTENSION_DIR, ext))
     .filter(extPath => fs.statSync(extPath).isDirectory());
@@ -325,7 +355,11 @@ async function openProfileTest() {
     chromeFlags.push(`--user-data-dir=${profilePath}`);
   }
 
+  // trong quá trình khởi chạy chrome (loading api mở profile) có thể gặp các lỗi liên quan đến connect và browser
+
+  // có thể bị lỗi 'connect' khi close nhanh bằng X trong lúc đang khởi chạy nhưng chưa hoàn tất các thành phần => launcher failed => bị treo api 1 lúc
   let chrome;
+
   try {
     chrome = await chromeLauncher.launch({
       port: 9221,
@@ -334,19 +368,23 @@ async function openProfileTest() {
       chromeFlags,
     });
   } catch (error) {
-    // usedPorts.delete(port);
-    throw new RestApiException(`Mở hồ sơ test thất bại: ${error.message}`);
+    throw new RestApiException(`Mở hồ sơ thất bại: ${error.message}`);
   }
 
   let context;
   let page;
 
   try {
+    // có thể bị lỗi 'connect' khi close nhanh bằng X trong lúc đang connect CDP
+    // xảy ra khi chrome chưa hoàn tất CDP (tức launcher thành công và đầy đủ nhưng chưa done CDP)
     const browser = await chromium.connectOverCDP(`http://127.0.0.1:${chrome.port}`);
 
-    // closeProfileListener(browser, profile.id);
+    closeProfileTestListener(browser);
 
     context = browser.contexts()[0];
+
+    // có thể bị lỗi 'newPage || failed open new tab' khi close nhanh bằng X trong lúc đang gọi page từ context
+    // xảy ra khi context đã bị detach do browser bị disconnect
     page = context.pages()[0] || await context.newPage();
 
     if (getOs() === 'win32') {
@@ -355,43 +393,83 @@ async function openProfileTest() {
       exec(`"${pathNircmd}" win activate process /${chrome.pid}`);
     }
 
-    // ko await khi mở tay profile tránh load lâu và khi nó closed all xong thì mới thao tác bằng tay ổn định
-    await closeExtensionPages(context) // chỉ await khi chạy script tránh xung đọt thao tác
+    // ko await khi mở tay profile tránh load lâu api
+    // if (runScript) {
+    //   await closeExtensionPages(context, browser) // chỉ await khi chạy script tránh xung đọt thao tác
+    // }
+    // else {
+    closeExtensionPages(context)
+    // }
+
 
   } catch (error) {
-    // usedPorts.delete(port);
-    throw new RestApiException(`Mở hồ sơ test thất bại: ${error.message}`);
+    if (error instanceof RestApiException) {
+      throw new RestApiException(error.message);
+    }
+    throw new RestApiException(`Mở hồ sơ thất bại: ${error.message}`);
   }
 
   return { context, page, chrome };
 }
 
-// async function openProfileForScript(profilePath, index) {
+const reConnectBrowser = async ({ chrome }) => {
+  // đây là reConnect tức chrome đã mở sẵn => đầy đủ các thành phần (CDP)
+  // close nhanh bằng X trong lúc đang reConnect CDP:
+  // có thể bị lỗi 'connect' => xảy ra trong khi chrome đã bị kill (mất CDP)
+  // có thể lỗi ui bên fe (vì khi close context đã mất event disconnected => ko socket)
+  let browser;
+  // connect lỗi do chrome bị kill => vào catch
+  // connect thành công ăn event disconnected => sau mà close bằng X thì vẫn dính socket
+  try {
+    browser = await chromium.connectOverCDP(`http://127.0.0.1:${chrome.port}`);
 
-//     const WIDTH = 500
-//     const HEIGHT = 310
-//     const cols = 4
+    // dính lại event disconnected cho browser
+    closeProfileTestListener(browser);
 
-//     const x = (index % cols) * WIDTH
-//     const y = Math.floor(index / cols) * (HEIGHT + 40)
+    // nếu ko lỗi ở connectOverCDP thì sẽ done socket
+  } catch (error) {
+    setBrowserTest({})
 
-//     const context = await chromium.launchPersistentContext(profilePath, {
-//         headless: false,
-//         chromiumSandbox: false,
-//         ignoreDefaultArgs: ["--enable-automation", "--no-sandbox", '--disable-blink-features=AutomationControlled'],
-//         args: [
-//             `--window-size=${WIDTH},${HEIGHT}`,
-//             `--window-position=${x},${y}`,
-//             '--no-sandbox',
-//             '--disable-blink-features=AutomationControlled',
-//             `--disable-extensions-except=${config.extensions.join(',')}`,
-//             `--load-extension=${config.extensions.join(',')}`,
-//         ],
-//         // userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15A372 Safari/604.1',
-//     })
+    const socket = getSocket();
+    socket.emit('profileTestClosed', { closed: true });
+  }
 
-// return { context, page };
+  return { browser };
+}
 
+const getValidPages = (context) => {
+  return context.pages().filter(p => {
+    const url = p.url();
+    return !/offscreen\.html$/.test(url) && !/background\.html$/.test(url);
+  });
+};
+
+function closeProfileTestListener(browser) {
+  browser.on('disconnected', async () => {
+    try {
+      // ddag xung dot stop voi x co bi vao day ca 2 hay ko, co vao true ca 2 hay ko, neu vao se ko tat duoc button
+      if (isStop) {
+        setIsStop(false);
+        return;
+      }
+
+      const profileTest = getBrowserTest();
+
+      // ăn disconnected do close bằng x thì ko làm gì cả vì ko có browserTest (tức ko setBrowserTest được do api bị vào catch)
+      if (Object.keys(profileTest).length <= 0) {
+        return;
+      }
+
+      setBrowserTest({})
+
+      const socket = getSocket();
+      socket.emit('profileTestClosed', { closed: true });
+
+    } catch (error) {
+      console.error('Có lỗi khi đóng hồ sơ', error.message);
+    }
+  });
+}
 
 module.exports = {
   openProfile,
@@ -407,4 +485,9 @@ module.exports = {
   usedPorts,
   getPortFree,
   sortGridLayout,
+  setBrowserTest,
+  getBrowserTest,
+  setIsStop,
+  reConnectBrowser,
+  getValidPages,
 }

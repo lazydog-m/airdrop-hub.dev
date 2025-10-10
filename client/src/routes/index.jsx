@@ -1,12 +1,11 @@
 import { Suspense, lazy } from 'react';
-import { Navigate, useRoutes, useLocation } from 'react-router-dom';
+import { useRoutes } from 'react-router-dom';
 import LoadingScreen from '../components/LoadingScreen';
 import DashboardLayout from '../layouts';
 
 // ----------------------------------------------------------------------
 
 const Loadable = (Component) => (props) => {
-
   window.scrollTo(0, 0);
   return (
     <Suspense fallback={<LoadingScreen />}>
@@ -67,7 +66,7 @@ export default function Router() {
           children: [
             { path: 'list', element: <ScriptList /> },
             { path: 'create', element: <ScriptNewEdit /> },
-            { path: ':fileName/edit', element: <ScriptNewEdit /> },
+            { path: ':name/edit', element: <ScriptNewEdit /> },
           ],
         },
         // { path: 'statistics', element: <ThongKe /> },
@@ -84,6 +83,6 @@ const ProfileList = Loadable(lazy(() => import('../pages/dashboard/profile/list/
 const WalletList = Loadable(lazy(() => import('../pages/dashboard/wallet/list/WalletList')));
 const TaskList = Loadable(lazy(() => import('../pages/dashboard/task/list/TaskList')));
 const ScriptList = Loadable(lazy(() => import('../pages/dashboard/script/list/ScriptList')));
-const ScriptNewEdit = Loadable(lazy(() => import('../pages/dashboard/script/create/ScriptNewEdit')));
-const TaskNewEdit = Loadable(lazy(() => import('../pages/dashboard/task/create/TaskNewEdit')));
+const ScriptNewEdit = Loadable(lazy(() => import('../pages/dashboard/script/new-edit/ScriptNewEdit')));
+const TaskNewEdit = Loadable(lazy(() => import('../pages/dashboard/task/new-edit/TaskNewEdit')));
 const GeneralApp = Loadable(lazy(() => import('../pages/dashboard/statistics/GeneralApp')));

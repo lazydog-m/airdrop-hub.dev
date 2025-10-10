@@ -3,23 +3,21 @@ import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 import DataTable from '@/components/DataTable';
 import { ButtonIcon } from '@/components/Button';
-import { convertWalletStatusEnumToReverse, convertWalletStatusEnumToTextReverse } from '@/utils/convertUtil';
-import { SquarePen, Trash2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Color, NOT_AVAILABLE, WalletStatus } from '@/enums/enum';
+import { convertWalletStatusEnumToReverse } from '@/utils/convertUtil';
+import { PencilLine, Trash2 } from 'lucide-react';
+import { Color, StatusCommon } from '@/enums/enum';
 import Modal from '@/components/Modal';
 import useSpinner from '@/hooks/useSpinner';
 import { apiDelete, apiPut } from '@/utils/axios';
 import useConfirm from '@/hooks/useConfirm';
-import useNotification from '@/hooks/useNotification';
-import WalletNewEditForm from '../create/WalletNewEditForm';
+import WalletNewEditForm from '../new-edit/WalletNewEditForm';
 import SwitchStyle from '@/components/Switch';
 import useMessage from '@/hooks/useMessage';
 import useCopy from '@/hooks/useCopy';
 import CopyButton from '@/components/CopyButton';
 import { Checkbox } from '@/components/Checkbox';
 
-const colunms = [
+const columns = [
   { header: 'Tên Ví', align: 'left' },
   { header: 'Mật Khẩu Ví', align: 'left' },
   { header: 'Trạng Thái', align: 'left' },
@@ -42,17 +40,14 @@ export default function WalletDataTable({
   const [open, setOpen] = React.useState(false);
   const [wallet, setWallet] = React.useState({});
   const { onOpen, onClose } = useSpinner();
-  const { showConfirm } = useConfirm();
+  const { showConfirm, showSaved } = useConfirm();
   const { onSuccess, onError } = useMessage();
   const isEdit = true;
 
   const { copied, handleCopy } = useCopy();
 
   const handleCopyText = (id, text, type) => {
-    navigator.clipboard.writeText(text).then(() => {
-      handleCopy(id, type);
-      onSuccess('Đã copy!');
-    });
+    handleCopy(id, type, text);
   }
 
   const handleClickOpen = (item) => {
@@ -65,21 +60,23 @@ export default function WalletDataTable({
   };
 
   const handleUpdateWalletStatus = (id, status) => {
-    const statusToTextReverse = convertWalletStatusEnumToTextReverse(status);
     const body = {
       id,
       status: convertWalletStatusEnumToReverse(status),
     };
-    showConfirm(`Xác nhận cập nhật trạng thái của ví thành '${statusToTextReverse?.toUpperCase()}'?`, () => putStatus(body));
+    putStatus(body);
+  }
+
+  const triggerPut = (data) => {
+    onClose();
+    onSuccess(`${data?.status === StatusCommon.IN_ACTIVE ? 'Kích hoạt' : 'Vô hiệu hóa'} thành công!`);
   }
 
   const putStatus = async (body) => {
     try {
       onOpen();
       const response = await apiPut(`/wallets/status`, body);
-      onUpdateData(true, response.data.data);
-      onSuccess("Cập nhật trạng thái của ví thành công!");
-      onClose();
+      onUpdateData(() => triggerPut(response.data.data));
     } catch (error) {
       console.error(error);
       onError(error.message);
@@ -87,13 +84,13 @@ export default function WalletDataTable({
     }
   }
 
-  const handleDelete = (id) => {
-    showConfirm("Xác nhận xóa ví?", () => remove(id));
+  const handleDelete = (id, name) => {
+    showConfirm(`Xác nhận xóa ví Web3 '${name}'?`, () => remove(id));
   }
 
   const triggerRemove = () => {
-    onSuccess("Xóa ví thành công!")
     onClose();
+    onSuccess("Xóa thành công!")
   }
 
   const remove = async (id) => {
@@ -122,33 +119,34 @@ export default function WalletDataTable({
           />
         </TableCell>
         <TableCell align="left">
-          <span className='font-inter d-flex color-white fw-bold'>
-            {row.name}
+          <span className='font-inter d-flex color-white fw-500'>
+            {`${row?.name} ${row?.count ? `(${row?.count})` : ''}`}
           </span>
         </TableCell>
         <TableCell align="left">
           <CopyButton
+            textTooLong
             text={row.password}
             copied={copied.id === row.id}
             onCopy={copied.id !== row.id ? () => handleCopyText(row.id, row.password) : () => { }}
           />
         </TableCell>
         <TableCell align="left">
-          <SwitchStyle checked={row.status === WalletStatus.IN_ACTIVE} onClick={() => handleUpdateWalletStatus(row.id, row.status)} />
+          <SwitchStyle checked={row.status === StatusCommon.IN_ACTIVE} onClick={() => handleUpdateWalletStatus(row.id, row.status)} />
         </TableCell>
         <TableCell align="left">
           <ButtonIcon
             onClick={() => handleClickOpen(row)}
             variant='ghost'
-            icon={<SquarePen color={Color.WARNING} />}
+            icon={<PencilLine color={Color.WARNING} />}
           />
-          {!row.wallet_id &&
-            <ButtonIcon
-              onClick={() => handleDelete(row.id)}
-              variant='ghost'
-              icon={<Trash2 color={Color.DANGER} />}
-            />
-          }
+          {/* {!row.wallet_id && */}
+          <ButtonIcon
+            onClick={() => handleDelete(row.id, row.name)}
+            variant='ghost'
+            icon={<Trash2 color={Color.DANGER} />}
+          />
+          {/* } */}
         </TableCell>
       </TableRow >
     ))
@@ -158,7 +156,7 @@ export default function WalletDataTable({
     <>
       <DataTableMemo
         className='mt-20'
-        colunms={colunms}
+        columns={columns}
         data={rows}
         pagination={pagination}
 
@@ -176,7 +174,7 @@ export default function WalletDataTable({
         size='sm'
         isOpen={open}
         onClose={handleClose}
-        title={"Cập nhật ví"}
+        title={"Cập nhật ví Web3"}
         content={
           <WalletNewEditForm
             onCloseModal={handleClose}

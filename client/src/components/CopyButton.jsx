@@ -1,21 +1,24 @@
-import { NOT_AVAILABLE } from '@/enums/enum';
 import { Copy, CopyCheck } from 'lucide-react';
-import * as React from 'react';
 import { Badge } from './ui/badge';
 
-export default function CopyButton({ text, textTooLong, copied, onCopy, ...other }) {
+export default function CopyButton({
+  text = '',
+  textTooLong,
+  copied,
+  onCopy,
+  ...other
+}) {
   return (
     <Badge
-      onClick={text === NOT_AVAILABLE ? () => { } : onCopy}
-      // variant={'secondary'}
-      className='badge-default copy font-inter'
+      onClick={onCopy}
+      className='badge-default copy'
       {...other}
     >
-      <span className={textTooLong ? 'text-too-long font-inter' : ''}>
+      <span className={`font-inter fw-400 ${textTooLong && 'text-too-long-auto'}`}>
         {text}
       </span>
       <span className='ms-4 font-inter'>
-        {text === NOT_AVAILABLE ? null : copied ? <CopyCheck size={'14px'} /> : <Copy size={'14px'} />}
+        {copied ? <CopyCheck size={'14px'} /> : <Copy size={'14px'} />}
       </span>
     </Badge>
   );

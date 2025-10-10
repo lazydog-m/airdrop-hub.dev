@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { ButtonIcon } from '@/components/Button';
-import { convertTaskStatusEnumToColorHex, convertTaskStatusEnumToText, convertWalletStatusEnumToReverse, convertWalletStatusEnumToTextReverse, darkenColor, lightenColor } from '@/utils/convertUtil';
+import { convertTaskStatusEnumToColorHex, convertTaskStatusEnumToText, darkenColor, lightenColor } from '@/utils/convertUtil';
 import { Calendar1, CalendarX, GripVertical, SquarePen, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Color, TaskStatus, } from '@/enums/enum';
@@ -11,15 +11,15 @@ import useNotification from '@/hooks/useNotification';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import useMessage from '@/hooks/useMessage';
 import Popover from '@/components/Popover';
-import { SelectItems } from '@/components/SelectItems';
 import { Link, useNavigate } from 'react-router-dom';
 import { PATH_DASHBOARD } from '@/routes/path';
 import { formatDateVN } from '@/utils/formatDate';
 import dayjs from 'dayjs';
+import { DropdownMenu } from '@/components/DropdownMenu';
 
 export default function TaskDataTable({ data, onUpdateData, onUpdateRow, onDeleteData, dataType }) {
   const { onOpen, onClose } = useSpinner();
-  const { showConfirm } = useConfirm();
+  const { showConfirm, showSaved } = useConfirm();
   const { onOpenSuccessNotify, onOpenErrorNotify } = useNotification();
   const { onSuccess } = useMessage();
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ export default function TaskDataTable({ data, onUpdateData, onUpdateRow, onDelet
       id,
       status,
     };
-    showConfirm(`Xác nhận cập nhật trạng thái của công việc thành '${convertTaskStatusEnumToText(status)?.toUpperCase()}'?`, () => putStatus(body));
+    showConfirm(`Xác nhận cập nhật trạng thái thành '${convertTaskStatusEnumToText(status)?.toUpperCase()}'?`, () => putStatus(body));
   }
 
   const handleUpdateTaskOrder = (orderedPayload) => {
@@ -45,7 +45,7 @@ export default function TaskDataTable({ data, onUpdateData, onUpdateRow, onDelet
       onOpen();
       const response = await apiPut(`/tasks/status`, body);
       onUpdateRow(response.data.data);
-      onSuccess("Cập nhật trạng thái của công việc thành công!");
+      showSaved("Cập nhật trạng thái thành công!");
     } catch (error) {
       console.error(error);
       onOpenErrorNotify(error.message);
@@ -54,8 +54,8 @@ export default function TaskDataTable({ data, onUpdateData, onUpdateRow, onDelet
     }
   }
 
-  const handleDelete = (id) => {
-    showConfirm("Xác nhận xóa công việc?", () => remove(id));
+  const handleDelete = (id, name) => {
+    showConfirm(`Xác nhận xóa công việc '${name}'?`, () => remove(id)); // ...
   }
 
   const remove = async (id) => {
@@ -63,7 +63,7 @@ export default function TaskDataTable({ data, onUpdateData, onUpdateRow, onDelet
       onOpen();
       const response = await apiDelete(`/tasks/${id}`);
       onDeleteData(response.data.data);
-      onSuccess("Xóa công việc thành công!");
+      showSaved("Xóa công việc thành công!");
     } catch (error) {
       console.error(error);
       onOpenErrorNotify(error.message);
@@ -152,7 +152,7 @@ export default function TaskDataTable({ data, onUpdateData, onUpdateRow, onDelet
                                 </Badge>
                               }
                               content={
-                                <SelectItems
+                                <DropdownMenu
                                   items={[
                                     {
                                       actions: TaskStatusList.map((item) => {
@@ -209,7 +209,7 @@ export default function TaskDataTable({ data, onUpdateData, onUpdateRow, onDelet
                                 />
                               </Link>
                               <ButtonIcon
-                                onClick={() => handleDelete(row.id)}
+                                onClick={() => handleDelete(row.id, row.task_name)}
                                 variant='ghost'
                                 icon={<Trash2 color={Color.DANGER} />}
                               />

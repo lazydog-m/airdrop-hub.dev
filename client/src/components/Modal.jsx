@@ -5,7 +5,6 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Grow from '@mui/material/Grow';
 import { X } from 'lucide-react';
-import { ButtonIcon } from './Button';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Grow timeout={5000} ref={ref} {...props} />;
@@ -21,14 +20,16 @@ Modal.propTypes = {
 }
 
 export default function Modal({
-  isOpen, onClose, size = 'md', title, content, minH, maxH, ...other }) {
+  isOpen, onClose, size = 'md', title, content, width, height, ...other }) {
 
   return (
     <Dialog
+      {...other}
       scroll='body'
       // {...other}
       open={isOpen}
       onClose={onClose}
+      disableEnforceFocus
       TransitionComponent={Transition}
       maxWidth={size}
       BackdropProps={{
@@ -49,21 +50,18 @@ export default function Modal({
         className='d-flex justify-content-between align-items-center color-white font-inter'
         sx={{
           letterSpacing: '0.05em',
-          fontSize: 18
+          fontSize: 18,
+          height: 65
         }}
       >
-        <span>
+        <span className='fw-500'>
           {title}
         </span>
-        <ButtonIcon
-          onClick={onClose}
-          variant='ghost'
-          icon={<X />}
-        />
+        <X className='x-modal' onClick={onClose} size={'22px'} />
       </DialogTitle>
       <DialogContent className='color-white' sx={{
-        minHeight: minH,
-        maxHeight: maxH,
+        width,
+        height,
         overflowY: 'hidden'
       }}>
         {content}

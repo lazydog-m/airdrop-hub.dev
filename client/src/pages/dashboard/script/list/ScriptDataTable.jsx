@@ -3,26 +3,20 @@ import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 import DataTable from '@/components/DataTable';
 import { ButtonIcon } from '@/components/Button';
-import { convertWalletStatusEnumToReverse, convertWalletStatusEnumToTextReverse } from '@/utils/convertUtil';
-import { SquarePen, Trash2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Color, NOT_AVAILABLE, WalletStatus } from '@/enums/enum';
-import Modal from '@/components/Modal';
+import { PencilLine, Trash2 } from 'lucide-react';
+import { Color } from '@/enums/enum';
 import useSpinner from '@/hooks/useSpinner';
 import { apiDelete, apiPut } from '@/utils/axios';
 import useConfirm from '@/hooks/useConfirm';
-import useNotification from '@/hooks/useNotification';
-// import WalletNewEditForm from '../create/WalletNewEditForm';
-import SwitchStyle from '@/components/Switch';
 import useMessage from '@/hooks/useMessage';
-import useCopy from '@/hooks/useCopy';
-import CopyButton from '@/components/CopyButton';
 import { Checkbox } from '@/components/Checkbox';
 import { Link } from 'react-router-dom';
 import { PATH_DASHBOARD } from '@/routes/path';
+import SwitchStyle from '@/components/Switch';
 
-const colunms = [
-  { header: 'Tên Kịch Bản', align: 'left' },
+const columns = [
+  { header: 'Tên Script', align: 'left' },
+  { header: 'Trạng thái', align: 'left' },
   { header: '', align: 'left' },
 ]
 
@@ -30,7 +24,6 @@ const DataTableMemo = React.memo(DataTable);
 
 export default function ScriptDataTable({
   data = [],
-  onUpdateData,
   onDeleteData,
   onChangePage,
   onSelectAllRows,
@@ -39,39 +32,16 @@ export default function ScriptDataTable({
   selected = []
 }) {
   const { onOpen, onClose } = useSpinner();
-  const { showConfirm } = useConfirm();
+  const { showConfirm, showSaved } = useConfirm();
   const { onSuccess, onError } = useMessage();
 
-  const handleUpdateWalletStatus = (id, status) => {
-    const statusToTextReverse = convertWalletStatusEnumToTextReverse(status);
-    const body = {
-      id,
-      status: convertWalletStatusEnumToReverse(status),
-    };
-    showConfirm(`Xác nhận cập nhật trạng thái của ví thành '${statusToTextReverse?.toUpperCase()}'?`, () => putStatus(body));
-  }
-
-  const putStatus = async (body) => {
-    try {
-      onOpen();
-      const response = await apiPut(`/wallets/status`, body);
-      onUpdateData(true, response.data.data);
-      onSuccess("Cập nhật trạng thái của ví thành công!");
-      onClose();
-    } catch (error) {
-      console.error(error);
-      onError(error.message);
-      onClose();
-    }
-  }
-
   const handleDelete = (fileName) => {
-    showConfirm("Xác nhận xóa kịch bản?", () => remove(fileName));
+    showConfirm(`Xác nhận xóa script '${fileName}'?`, () => remove(fileName));
   }
 
   const triggerRemove = () => {
-    onSuccess("Xóa kịch bản thành công!")
     onClose();
+    onSuccess("Xóa script thành công!")
   }
 
   const remove = async (fileName) => {
@@ -100,27 +70,25 @@ export default function ScriptDataTable({
           />
         </TableCell>
         <TableCell align="left">
-          <span className='font-inter d-flex color-white fw-bold'>
+          <span className='font-inter d-flex color-white fw-500'>
             {row.fileName}
           </span>
         </TableCell>
-        {/*
         <TableCell align="left">
-          <SwitchStyle checked={row.status === WalletStatus.IN_ACTIVE} onClick={() => handleUpdateWalletStatus(row.id, row.status)} />
+          <SwitchStyle checked={true} />
         </TableCell>
-        */}
         <TableCell align="left">
           <Link to={PATH_DASHBOARD.script.edit(row.fileName)}>
             <ButtonIcon
               variant='ghost'
-              icon={<SquarePen color={Color.WARNING} />}
+              icon={<PencilLine color={Color.WARNING} />}
             />
           </Link>
-          <ButtonIcon
-            onClick={() => handleDelete(row.fileName)}
-            variant='ghost'
-            icon={<Trash2 color={Color.DANGER} />}
-          />
+          {/* <ButtonIcon */}
+          {/*   onClick={() => handleDelete(row.fileName)} */}
+          {/*   variant='ghost' */}
+          {/*   icon={<Trash2 color={Color.DANGER} />} */}
+          {/* /> */}
         </TableCell>
       </TableRow >
     ))
@@ -130,7 +98,7 @@ export default function ScriptDataTable({
     <>
       <DataTableMemo
         className='mt-20'
-        colunms={colunms}
+        columns={columns}
         data={rows}
         pagination={pagination}
 
@@ -141,7 +109,7 @@ export default function ScriptDataTable({
         onSelectAllRows={onSelectAllRows}
         onChangePage={onChangePage}
 
-        selectedObjText={'kịch bản'}
+        selectedObjText={'script'}
       />
     </>
   );

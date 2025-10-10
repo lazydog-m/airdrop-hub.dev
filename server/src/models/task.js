@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const db = require('../configs/dbConnection');
-const { TaskType, TaskStatus, TaskRank } = require('../enums');
+const { TaskType, TaskStatus, TaskRank, StatusCommon } = require('../enums');
 
 const Task = db.define('tasks', {
   id: {
@@ -8,21 +8,41 @@ const Task = db.define('tasks', {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
   },
-  task_name: {
+  project_id: {
+    type: DataTypes.UUID,
+    references: {
+      model: 'projects',
+      key: 'id'
+    },
+    allowNull: false,
+  },
+  name: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  order: {
+  points: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+  },
+  url: {
+    type: DataTypes.STRING(1000),
+  },
+  script_name: {
+    type: DataTypes.STRING(50),
+  },
+  description: {
+    type: DataTypes.STRING(10000),
+  },
+  has_manual: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  order_star: {
+    type: DataTypes.DATE,
   },
   status: {
     type: DataTypes.ENUM,
-    values: [TaskStatus.TO_DO, TaskStatus.COMPLETED, TaskStatus.TO_REVIEW, TaskStatus.IN_PROGRESS],
-    defaultValue: TaskStatus.TO_DO,
-  },
-  description: {
-    type: DataTypes.TEXT,
+    values: [StatusCommon.IN_ACTIVE, StatusCommon.UN_ACTIVE],
+    defaultValue: StatusCommon.IN_ACTIVE,
   },
   due_date: {
     type: DataTypes.DATEONLY,

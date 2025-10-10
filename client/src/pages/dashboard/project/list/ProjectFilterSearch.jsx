@@ -1,49 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { CirclePlus, ListFilter } from 'lucide-react';
-import { CheckboxItems } from '@/components/Checkbox';
+import { DropdownCheckboxMenu } from '@/components/Checkbox';
 import Popover from "@/components/Popover";
 import { ButtonGhost, ButtonOutlineTags } from '@/components/Button';
-import { Color, ProjectCost, ProjectStatus, ProjectType } from '@/enums/enum';
+import { Color, DAILY_TASK_TEXT, PROJECT_STATUS_ARR, PROJECT_TYPE_ARR } from '@/enums/enum';
 import { Badge } from '@/components/ui/badge';
-import { convertProjectCostTypeEnumToColorHex, convertProjectFilterOtherToColorHex, convertProjectStatusEnumToColorHex, convertProjectStatusEnumToText, convertProjectTypeEnumToColorHex, darkenColor, lightenColor } from '@/utils/convertUtil';
+import { convertProjectStatusEnumToColorHex, convertProjectStatusEnumToText, convertProjectTaskItemsToColorHex, convertProjectTypeEnumToColorHex, darkenColor, lightenColor } from '@/utils/convertUtil';
 import useDebounce from '@/hooks/useDebounce';
-import { Tooltip } from 'antd';
-import TooltipDefault from '@/components/TooltipDefault';
+import { RiTodoLine } from 'react-icons/ri';
 
 export default function ProjectFilterSearch({
-  selectedStatusItems,
+  selectedStatusItems = [],
   onChangeSelectedStatusItems,
   onClearSelectedStatusItems,
 
-  selectedTypeItems,
+  selectedTypeItems = [],
   onChangeSelectedTypeItems,
   onClearSelectedTypeItems,
 
-  selectedCostItems,
-  onChangeSelectedCostItems,
-  onClearSelectedCostItems,
+  selectedTaskItems = [],
+  onChangeSelectedTaskItems,
+  onClearSelectedTaskItems,
 
-  selectedOtherItems,
-  onChangeSelectedOtherItems,
-  onClearSelectedOtherItems,
+  selectedCheatItems = [],
+  onChangeSelectedCheatItems,
+  onClearSelectedCheatItems,
+
+  selectedTask,
+  onChangeSelectedTask,
+  onClearSelectedTask,
 
   onClearAllSelectedItems,
   onChangeSearch,
   search,
 }) {
-
-  // alert(darkenColor("#fd5c63"))
-
-  // const [openSort, setOpenSort] = useState(false);
-
-  // const handleChangeSelectedSort = (selected) => {
-  //   onChangeSelectedSort(selected);
-  //
-  //   setTimeout(() => {
-  //     setOpenSort(false);
-  //   }, 50);
-  // }
 
   const [filterSearch, setFilterSearch] = useState('');
 
@@ -58,119 +49,135 @@ export default function ProjectFilterSearch({
     setFilterSearch('');
   }
 
+  const taskFilters = {
+    onChange: onChangeSelectedTask,
+    selected: selectedTask,
+    items: [
+      {
+        header: DAILY_TASK_TEXT,
+        icon: <RiTodoLine size={'16px'} />,
+        children: [
+          'UTC+0',
+          'CD-24',
+          'Chưa Hoàn Thành',
+          // 'Todo > 0',
+        ]
+      },
+      {
+        header: 'Task dự án',
+        icon: <RiTodoLine size={'16px'} />,
+        children: [
+          'Đến Hạn',
+          'Chưa Làm',
+        ]
+      }
+    ]
+  };
+
+
   return (
-    <div className="d-flex mt-20 justify-content-between align-items-center">
+    <div className="d-flex mt-20 justify-content-between align-items-center gap-20">
       <div className="filter-search d-flex gap-10">
         <Input
           placeholder='Tìm kiếm dự án ...'
-          style={{ width: '220px' }}
+          style={{ width: '250px' }}
           className='custom-input'
           value={filterSearch}
           onChange={(event) => setFilterSearch(event.target.value)}
         />
 
-        <div className="filters-button d-flex gap-10">
-          <Popover className='button-dropdown-filter-checkbox'
-            trigger={
-              <ButtonOutlineTags
-                title={typeFilters.name}
-                icon={<CirclePlus />}
-                className='button-outlined font-inter pointer color-white h-40 fs-13 d-flex'
-                selected={selectedTypeItems}
-                tags={
-                  <Tags selectedItems={selectedTypeItems} style={convertProjectTypeEnumToColorHex} />
-                }
-              />
-            }
-            content={
-              <CheckboxItems
-                minWidth={180}
-                items={typeFilters.items}
-                selectedItems={selectedTypeItems}
-                onChangeSelectedItems={onChangeSelectedTypeItems}
-                onClearSelectedItems={onClearSelectedTypeItems}
-              />
-            }
-          />
-
-          <Popover className='button-dropdown-filter-checkbox'
-            trigger={
-              <ButtonOutlineTags
-                title={costFilters.name}
-                icon={<CirclePlus />}
-                className='button-outlined font-inter pointer color-white h-40 fs-13 d-flex'
-                selected={selectedCostItems}
-                tags={
-                  <Tags selectedItems={selectedCostItems} style={convertProjectCostTypeEnumToColorHex} />
-
-                }
-              />
-            }
-            content={
-              <CheckboxItems
-                minWidth={150}
-                items={costFilters.items}
-                selectedItems={selectedCostItems}
-                onChangeSelectedItems={onChangeSelectedCostItems}
-                onClearSelectedItems={onClearSelectedCostItems}
-              />
-            }
-          />
-
-          <Popover className='button-dropdown-filter-checkbox'
-            trigger={
-              <ButtonOutlineTags
-                title={statusFilters.name}
-                icon={<CirclePlus />}
-                className='button-outlined font-inter pointer color-white h-40 fs-13 d-flex'
-                selected={selectedStatusItems}
-                tags={
-                  <Tags selectedItems={selectedStatusItems} style={convertProjectStatusEnumToColorHex} convert={convertProjectStatusEnumToText} />
-
-                }
-              />
-            }
-            content={
-              <CheckboxItems
-                convert={convertProjectStatusEnumToText}
-                items={statusFilters.items}
-                selectedItems={selectedStatusItems}
-                onChangeSelectedItems={onChangeSelectedStatusItems}
-                onClearSelectedItems={onClearSelectedStatusItems}
-              />
-            }
-          />
-
-          <Popover className='button-dropdown-filter-checkbox'
-            trigger={
-              <ButtonOutlineTags
-                showTagOne={true}
-                title={otherFilters.name}
-                icon={<CirclePlus />}
-                className='button-outlined font-inter pointer color-white h-40 fs-13 d-flex'
-                selected={selectedOtherItems}
-                tags={
-                  <Tags selectedItems={selectedOtherItems} style={convertProjectFilterOtherToColorHex} />
-                }
-              />
-            }
-            content={
-              <CheckboxItems
-                items={otherFilters.items}
-                selectedItems={selectedOtherItems}
-                onChangeSelectedItems={onChangeSelectedOtherItems}
-                onClearSelectedItems={onClearSelectedOtherItems}
-              />
-            }
-          />
-
-          {(selectedStatusItems.length > 0 || selectedTypeItems.length > 0 || selectedCostItems.length > 0 || selectedOtherItems.length > 0 || search) &&
-            <ButtonGhost
-              icon={<ListFilter color={Color.ORANGE} />}
-              onClick={clearAll}
+        <Popover className='button-dropdown-filter-checkbox'
+          trigger={
+            <ButtonOutlineTags
+              title={typeFilters.name}
+              icon={<CirclePlus />}
+              className='button-outlined font-inter pointer color-white h-40 fs-13 d-flex'
+              selected={selectedTypeItems}
+              tags={
+                <Tags
+                  selectedItems={selectedTypeItems}
+                  style={convertProjectTypeEnumToColorHex}
+                />
+              }
             />
           }
-        </div>
+          content={
+            <DropdownCheckboxMenu
+              items={typeFilters.items}
+              selectedItems={selectedTypeItems}
+              onChangeSelectedItems={onChangeSelectedTypeItems}
+              onClearSelectedItems={onClearSelectedTypeItems}
+            />
+          }
+        />
+
+        <Popover className='button-dropdown-filter-checkbox'
+          trigger={
+            <ButtonOutlineTags
+              title={statusFilters.name}
+              icon={<CirclePlus />}
+              className='button-outlined font-inter pointer color-white h-40 fs-13 d-flex'
+              selected={selectedStatusItems}
+              tags={
+                <Tags
+                  selectedItems={selectedStatusItems}
+                  style={convertProjectStatusEnumToColorHex}
+                  convert={convertProjectStatusEnumToText}
+                />
+
+              }
+            />
+          }
+          content={
+            <DropdownCheckboxMenu
+              convert={convertProjectStatusEnumToText}
+              items={statusFilters.items}
+              selectedItems={selectedStatusItems}
+              onChangeSelectedItems={onChangeSelectedStatusItems}
+              onClearSelectedItems={onClearSelectedStatusItems}
+            />
+          }
+        />
+
+        <Popover className='button-dropdown-filter-checkbox'
+          trigger={
+            <ButtonOutlineTags
+              title={selectedTask || 'Task'}
+              icon={<CirclePlus />}
+              // showTagOne
+              className='button-outlined font-inter pointer color-white h-40 fs-13 d-flex'
+              selected={selectedTaskItems}
+              tags={
+                <Tags
+                  selectedItems={selectedTaskItems}
+                  style={convertProjectTaskItemsToColorHex}
+                />
+
+              }
+            />
+          }
+          content={
+            <DropdownCheckboxMenu
+              tag
+              minWidth={selectedTask ? '202px' : '180px'}
+              filterSelect={taskFilters}
+              selectedItems={selectedTaskItems}
+              onChangeSelectedItems={onChangeSelectedTaskItems}
+              onClearSelectedItems={() => {
+                onClearSelectedTask();
+                onClearSelectedTaskItems();
+              }}
+            />
+          }
+        />
+
+        {(selectedStatusItems.length > 0 || selectedTypeItems.length > 0 || selectedTask || search) &&
+          <ButtonGhost
+            icon={<ListFilter color={Color.ORANGE} />}
+            onClick={clearAll}
+          />
+        }
+
       </div>
     </div>
   )
@@ -179,39 +186,33 @@ export default function ProjectFilterSearch({
 const statusFilters = {
   name: 'Trạng thái',
   items: [
-    ProjectStatus.DOING,
-    ProjectStatus.END_PENDING_UPDATE,
-    ProjectStatus.SNAPSHOT,
-    ProjectStatus.TGE,
-    ProjectStatus.END_AIRDROP
-  ],
-};
-
-const otherFilters = {
-  name: 'Khác',
-  items: [
-    'Làm Hằng Ngày',
-    'Làm Mới 7 Giờ Sáng',
-    'Chưa Làm Hôm Nay',
-    'Cheat',
+    ...PROJECT_STATUS_ARR
   ],
 };
 
 const typeFilters = {
   name: 'Mảng',
-  items: [ProjectType.WEB, ProjectType.TESTNET, ProjectType.DEPIN, ProjectType.RETROACTIVE, ProjectType.GAME, ProjectType.GALXE],
+  items: [
+    ...PROJECT_TYPE_ARR
+  ],
 };
 
-const costFilters = {
-  name: 'Chi phí',
-  items: [ProjectCost.FREE, ProjectCost.FEE, ProjectCost.HOLD],
+
+const cheatFilters = {
+  name: 'Cheating',
+  items: [
+    'Có',
+    'Không',
+    '',
+  ],
 };
 
 const Tags = ({ selectedItems, style = () => { }, convert }) => {
   return (
-    selectedItems.map((item) => {
+    selectedItems.map((item, index) => {
       return (
         <Badge
+          key={index}
           style={{
             backgroundColor: darkenColor(style(item)),
             borderColor: lightenColor(style(item)),
@@ -225,3 +226,4 @@ const Tags = ({ selectedItems, style = () => { }, convert }) => {
     })
   )
 }
+

@@ -1,12 +1,30 @@
 import { Button } from "./ui/button";
 import { Badge } from '@/components/ui/badge'
 import { Separator } from "./ui/separator";
-import { reverse } from "lodash";
 import { lightenColor } from "@/utils/convertUtil";
 
 export const ButtonPrimary = ({ icon, title, ...other }) => {
   return (
-    <Button className='button-primary select-none font-inter pointer color-white h-40 fs-13 d-flex' {...other}>
+    <Button className='button-primary select-none font-inter pointer color-white h-40 fs-13' {...other}>
+      {/* <span className="mb-0.5 d-flex gap-2 items-center"> */}
+      {icon}
+      {title}
+      {/* </span> */}
+    </Button>
+  )
+}
+
+export const ButtonOutlineInfo = ({ icon, title, ...other }) => {
+  return (
+    <Button className='button-outline-info select-none font-inter pointer h-40 fs-13 d-flex' {...other}>
+      {icon} {title}
+    </Button>
+  )
+}
+
+export const ButtonInfo = ({ icon, title, ...other }) => {
+  return (
+    <Button className='button-info select-none font-inter pointer h-40 fs-13 d-flex' {...other}>
       {icon} {title}
     </Button>
   )
@@ -15,23 +33,17 @@ export const ButtonPrimary = ({ icon, title, ...other }) => {
 export const ButtonOutlinePrimary = ({ icon, title, ...other }) => {
   return (
     <Button className='button-outline-primary select-none font-inter pointer h-40 fs-13 d-flex' {...other}>
-      {icon} {title}
-    </Button>
-  )
-}
-
-export const ButtonOutlineDanger = ({ icon, title, ...other }) => {
-  return (
-    <Button className='button-outline-danger select-none font-inter pointer h-40 fs-13 d-flex' {...other}>
-      {icon} {title}
+      {icon}
+      {title}
     </Button>
   )
 }
 
 export const ButtonDanger = ({ icon, title, ...other }) => {
   return (
-    <Button variant={'destructive'} className='font-inter pointer color-white h-40 fs-13 d-flex' {...other}>
-      {icon} {title}
+    <Button variant={'destructive'} className='font-inter select-none bdr pointer color-white h-40 fs-13 d-flex' {...other}>
+      {icon}
+      {title}
     </Button>
   )
 }
@@ -94,7 +106,7 @@ export const ButtonOutlineTags = ({ icon, title, selected = [], tags, showTagOne
   return (
     <Button {...other}>
 
-      <div className={`d-flex align-items-center gap-8 ${selected.length > 0 && 'pe-8'}`}>
+      <div className={`d-flex fw-500 align-items-center gap-8 ${selected.length > 0 && 'pe-8'}`}>
         {icon} {title}
       </div>
 

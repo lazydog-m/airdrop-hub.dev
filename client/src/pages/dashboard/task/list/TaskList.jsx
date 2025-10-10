@@ -6,9 +6,8 @@ import Page from "@/components/Page";
 import { CirclePlus } from 'lucide-react';
 import Modal from '@/components/Modal';
 import { apiGet } from '@/utils/axios';
-import { CURRENT_DATA_TYPE, TaskRank, WalletStatus } from '@/enums/enum';
+import { CURRENT_DATA_TYPE, TaskRank } from '@/enums/enum';
 import useSpinner from '@/hooks/useSpinner';
-import TaskNewEditForm from '../create/TaskNewEditForm';
 import TaskDataTable from './TaskDataTable';
 import Editor from '@/components/Editor';
 import { Link } from 'react-router-dom';
@@ -61,7 +60,7 @@ export default function TaskList() {
   }
 
   return (
-    <Page title='Quản lý công việc - AirdropHub'>
+    <Page title='Quản lý công việc'>
       <Container>
 
         <HeaderAction
@@ -70,7 +69,7 @@ export default function TaskList() {
             <Link to={PATH_DASHBOARD.task.create}>
               <ButtonPrimary
                 icon={<CirclePlus />}
-                title='Thêm mới'
+                title='Tạo công việc'
               />
             </Link>
           }

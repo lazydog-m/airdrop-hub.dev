@@ -5,12 +5,12 @@ const api = express.Router();
 const { getAllProjects, getProjectById, createProject, updateProject, updateProjectStatus, deleteProject, createDailyTasksCompleted, getDailyTasks, updateProjectStar } = require('../services/projectService');
 const apiRes = require('../utils/apiResponse');
 const sequelize = require('../configs/dbConnection');
-const { createTask, updateTask, updateTaskStatus, deleteTask, updateTaskOrder, getAllTasks, getTaskById } = require('../services/taskService');
+const { createTask, updateTask, updateTaskStatus, deleteTask, updateTaskOrder, getTaskById, getAllTasksByProjectId, updateTaskOrderStar } = require('../services/taskService');
 
-// Get all tasks
-api.get('/', async (req, res, next) => {
+// Get all tasks by project 
+api.get('/:projectId', async (req, res, next) => {
   try {
-    const tasks = await getAllTasks(req);
+    const tasks = await getAllTasksByProjectId(req);
     return apiRes.toJson(res, tasks);
   } catch (error) {
     next(error);
@@ -18,14 +18,14 @@ api.get('/', async (req, res, next) => {
 });
 
 // Get task by ID
-api.get('/:id', async (req, res, next) => {
-  try {
-    const task = await getTaskById(req.params.id);
-    return apiRes.toJson(res, task);
-  } catch (error) {
-    next(error);
-  }
-});
+// api.get('/:id', async (req, res, next) => {
+//   try {
+//     const task = await getTaskById(req.params.id);
+//     return apiRes.toJson(res, task);
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 // Create a new task
 api.post('/', async (req, res, next) => {
@@ -55,6 +55,17 @@ api.put('/order', async (req, res, next) => {
   try {
     const updatedTaskOrder = await updateTaskOrder(body);
     return apiRes.toJson(res, updatedTaskOrder);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Update task order star
+api.put('/order-star', async (req, res, next) => {
+  const { body } = req;
+  try {
+    const updatedTask = await updateTaskOrderStar(body);
+    return apiRes.toJson(res, updatedTask);
   } catch (error) {
     next(error);
   }

@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const db = require('../configs/dbConnection');
-const { WalletStatus } = require('../enums');
+const { StatusCommon } = require('../enums');
 
 const Wallet = db.define('wallets', {
   id: {
@@ -14,14 +14,12 @@ const Wallet = db.define('wallets', {
   },
   password: {
     type: DataTypes.STRING,
-  },
-  ecosystem: {
-    type: DataTypes.STRING,
+    allowNull: false,
   },
   status: {
     type: DataTypes.ENUM,
-    values: [WalletStatus.UN_ACTIVE, WalletStatus.IN_ACTIVE],
-    defaultValue: WalletStatus.IN_ACTIVE,
+    values: [StatusCommon.UN_ACTIVE, StatusCommon.IN_ACTIVE],
+    defaultValue: StatusCommon.IN_ACTIVE,
   },
   deletedAt: {
     type: DataTypes.DATE,

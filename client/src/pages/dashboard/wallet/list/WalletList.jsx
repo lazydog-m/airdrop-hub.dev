@@ -3,12 +3,12 @@ import { ButtonDanger, ButtonPrimary } from "@/components/Button";
 import Container from "@/components/Container";
 import { HeaderAction } from "@/components/HeaderSection";
 import Page from "@/components/Page";
-import { CirclePlus, DatabaseZap, Trash2Icon } from 'lucide-react';
+import { CirclePlus, DatabaseZap, Plus, Trash2Icon } from 'lucide-react';
 import Modal from '@/components/Modal';
 import { apiGet } from '@/utils/axios';
 import { CURRENT_DATA_TYPE, TRASH_DATA_TYPE, WalletStatus } from '@/enums/enum';
 import useSpinner from '@/hooks/useSpinner';
-import WalletNewEditForm from '../create/WalletNewEditForm';
+import WalletNewEditForm from '../new-edit/WalletNewEditForm';
 import WalletDataTable from './WalletDataTable';
 import WalletFilterSearch from './WalletFilterSearch';
 import useMessage from '@/hooks/useMessage';
@@ -18,7 +18,6 @@ import { delayApi } from '@/utils/commonUtil';
 const WalletDataTableMemo = React.memo(WalletDataTable);
 
 export default function WalletList() {
-  // const [dataType, setDataType] = useState(CURRENT_DATA_TYPE);
   const [open, setOpen] = useState(false);
   const [data, setData] = useState([]);
   const [pagination, setPagination] = useState({});
@@ -40,7 +39,6 @@ export default function WalletList() {
   const fetchApi = async (dataTrigger = false, onTrigger = () => { }) => {
     const params = {
       selectedStatusItems,
-      // dataType,
       page,
       search,
     }
@@ -79,17 +77,8 @@ export default function WalletList() {
     onSelectRow(id);
   }, [selected])
 
-  const handleUpdateData = useCallback((isEdit, walletNew, onTrigger = () => { }) => {
-    if (!isEdit) {
-      fetchApi(true, onTrigger)
-    }
-    else {
-      setData((prevData) =>
-        prevData.map((wallet) =>
-          wallet.id === walletNew.id ? walletNew : wallet
-        )
-      );
-    }
+  const handleUpdateData = useCallback((onTrigger = () => { }) => {
+    fetchApi(true, onTrigger)
   }, [search, page, selectedStatusItems]);
 
   const handleDeleteData = useCallback((id, onTrigger = () => { }) => {
@@ -139,15 +128,15 @@ export default function WalletList() {
   }, [selectedStatusItems,/*  dataType, */ search, page])
 
   return (
-    <Page title='Quản lý ví - AirdropHub'>
+    <Page title='Ví Web3'>
       <Container>
 
         <HeaderAction
-          heading='Danh sách ví'
+          heading='Danh sách ví Web3'
           action={
             <ButtonPrimary
-              icon={<CirclePlus />}
-              title='Thêm mới'
+              icon={<Plus strokeWidth={2.5} />}
+              title='Thêm ví Web3'
               onClick={handleClickOpen}
             />
           }
@@ -180,7 +169,7 @@ export default function WalletList() {
           size='sm'
           isOpen={open}
           onClose={handleClose}
-          title={"Thêm mới ví"}
+          title={"Thêm mới ví Web3"}
           content={
             <WalletNewEditForm
               onCloseModal={handleClose}

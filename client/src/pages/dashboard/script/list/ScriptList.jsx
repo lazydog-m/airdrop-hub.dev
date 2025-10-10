@@ -3,7 +3,7 @@ import { ButtonPrimary } from "@/components/Button";
 import Container from "@/components/Container";
 import { HeaderAction } from "@/components/HeaderSection";
 import Page from "@/components/Page";
-import { CirclePlus, } from 'lucide-react';
+import { FilePlus, } from 'lucide-react';
 import { apiGet } from '@/utils/axios';
 import useSpinner from '@/hooks/useSpinner';
 import ScriptDataTable from './ScriptDataTable.jsx';
@@ -17,7 +17,6 @@ import { PATH_DASHBOARD } from '@/routes/path.js';
 const ScriptDataTableMemo = React.memo(ScriptDataTable);
 
 export default function ScriptList() {
-  const [open, setOpen] = useState(false);
   const [data, setData] = useState([]);
   const [pagination, setPagination] = useState({});
   const { onOpen, onClose } = useSpinner();
@@ -113,16 +112,16 @@ export default function ScriptList() {
   }, [selectedStatusItems, search, page])
 
   return (
-    <Page title='Quản lý kịch bản - AirdropHub'>
+    <Page title='Scripts'>
       <Container>
 
         <HeaderAction
-          heading='Danh sách kịch bản'
+          heading='Danh sách scripts'
           action={
             <Link to={PATH_DASHBOARD.script.create}>
               <ButtonPrimary
-                icon={<CirclePlus />}
-                title='Thêm mới'
+                icon={<FilePlus />}
+                title='Tạo script'
               />
             </Link>
           }

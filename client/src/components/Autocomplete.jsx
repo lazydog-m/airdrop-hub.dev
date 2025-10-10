@@ -1,8 +1,13 @@
+import { Check } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { Input } from './ui/input';
 
-function AutocompleteInput({ value = '', items = [], onChange = () => { }, ...other }) {
-  const [inputValue, setInputValue] = useState(value);
+function Autocomplete({
+  value = '',
+  items = [],
+  onChange = () => { },
+  ...other
+}) {
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -11,43 +16,33 @@ function AutocompleteInput({ value = '', items = [], onChange = () => { }, ...ot
 
   const handleInputChange = (e) => {
     const value = e.target.value;
-    setInputValue(value);
     onChange(value);
 
-    if (value) {
-      const filtered = items.filter(item =>
-        item.toLowerCase().includes(value.toLowerCase())
-      );
-      setFilteredSuggestions(filtered);
-      setIsDropdownVisible(true);
-      setHighlightedIndex(-1);
-    } else {
-      setFilteredSuggestions([]);
-      setIsDropdownVisible(false);
-    }
+    const filtered = items.filter(item =>
+      item.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredSuggestions(filtered);
+    setIsDropdownVisible(filtered.length > 0);
   };
 
-  const handleMouseDownInput = () => {
-    if (inputValue) {
-      const filtered = items.filter(item =>
-        item.toLowerCase().includes(inputValue.toLowerCase())
-      );
-      setFilteredSuggestions(filtered);
-      setIsDropdownVisible(filtered.length > 0);
-      setHighlightedIndex(-1);
-    }
+  const handleMouseDownInput = () => { // click vao input
+    const filtered = items.filter(item =>
+      item.toLowerCase().includes(value.toLowerCase())
+    );
+    // setFilteredSuggestions(filtered);
+    // setIsDropdownVisible(filtered.length > 0);
+    setFilteredSuggestions(items);
+    setIsDropdownVisible(items?.length > 0);
   };
 
   const handleKeyDown = (e) => {
-
     if (e.ctrlKey && e.key === ' ') {
       e.preventDefault();
       const filtered = items.filter(item =>
-        item.toLowerCase().includes(inputValue.toLowerCase())
+        item.toLowerCase().includes(value.toLowerCase())
       );
-      setFilteredSuggestions(filtered);
-      setIsDropdownVisible(filtered.length > 0);
-      setHighlightedIndex(-1);
+      setFilteredSuggestions(items);
+      setIsDropdownVisible(items?.length > 0);
     }
     else if (e.key === 'ArrowDown') {
       setHighlightedIndex((prevIndex) =>
@@ -67,12 +62,14 @@ function AutocompleteInput({ value = '', items = [], onChange = () => { }, ...ot
     }
   };
 
+  // function capitalizeCssLike(str) {
+  //   return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  // }
+
   const handleSuggestionClick = (suggestion) => {
-    setInputValue(suggestion);
     onChange(suggestion);
     setFilteredSuggestions([]);
     setIsDropdownVisible(false);
-    setHighlightedIndex(-1);
   };
 
   const handleSuggestionMouseDown = (e) => {
@@ -112,22 +109,13 @@ function AutocompleteInput({ value = '', items = [], onChange = () => { }, ...ot
     }
   }, [highlightedIndex]);
 
-  // useEffect(() => {
-  //   if (dropdownRef.current && highlightedIndex >= 0) {
-  //     const highlightedElement = dropdownRef.current.children[highlightedIndex];
-  //     if (highlightedElement) {
-  //       highlightedElement.scrollIntoView({ block: 'nearest' });
-  //     }
-  //   }
-  // }, [highlightedIndex]);
-
   return (
     <div ref={wrapperRef} style={{ position: 'relative' }}>
       <Input
         className='mt-10 font-inter custom-input'
         autoComplete='off'
         {...other}
-        value={inputValue}
+        value={value}
         onChange={handleInputChange}
         onMouseDown={handleMouseDownInput}
         onKeyDown={handleKeyDown}
@@ -135,14 +123,17 @@ function AutocompleteInput({ value = '', items = [], onChange = () => { }, ...ot
       {isDropdownVisible && filteredSuggestions.length > 0 && (
         <ul className='autocomplete scroll' ref={dropdownRef}>
           {filteredSuggestions.map((suggestion, index) => (
-            <li className='autocomplete-item fw-400'
+            <li className={`autocomplete-item fw-400 d-flex justify-content-between align-items-center`}
               key={index}
               onMouseDown={handleSuggestionMouseDown}
               style={{
-                backgroundColor: highlightedIndex === index ? '#505050' : '',
+                backgroundColor: (highlightedIndex === index) ? '#323230' : '',
               }}
             >
-              {suggestion}
+              <span className='text-capitalize'>
+                {suggestion}
+              </span>
+              {/* {inputValue === suggestion && <Check size={'16px'} />} */}
             </li>
           ))}
         </ul>
@@ -151,4 +142,4 @@ function AutocompleteInput({ value = '', items = [], onChange = () => { }, ...ot
   );
 }
 
-export default AutocompleteInput;
+export default Autocomplete;

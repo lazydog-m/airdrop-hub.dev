@@ -1,4 +1,4 @@
-import { Color, DailyTaskRefresh, ProjectCost, ProjectStatus, ProjectType, TaskStatus, WalletStatus } from "@/enums/enum";
+import { Color, DailyTaskRefresh, DAILY_TASK_TEXT, ProjectCost, ProjectStatus, ProjectType, StatusCommon, TaskStatus } from "@/enums/enum";
 
 export const convertProjectStatusEnumToText = (status) => {
 
@@ -6,26 +6,15 @@ export const convertProjectStatusEnumToText = (status) => {
     case ProjectStatus.DOING:
       return "Đang làm"
     case ProjectStatus.END_PENDING_UPDATE:
-      return "End - Chờ update"
+      return "End - Chờ Update"
+    case ProjectStatus.SNAPSHOT:
+      return "Snapshot"
+    case ProjectStatus.TGE:
+      return "TGE Soon"
     case ProjectStatus.END_AIRDROP:
       return "Airdrop"
     default: return status
   }
-
-}
-
-export const convertProjectStatusTextToEnum = (statusText) => {
-
-  switch (statusText) {
-    case "Đang làm":
-      return ProjectStatus.DOING
-    case "End - Chờ update":
-      return ProjectStatus.END_PENDING_UPDATE
-    case "Airdrop":
-      return ProjectStatus.END_AIRDROP
-    default: return statusText
-  }
-
 }
 
 export const convertProjectStatusEnumToColorHex = (status) => {
@@ -51,8 +40,8 @@ export const convertProjectTypeEnumToColorHex = (type) => {
   switch (type) {
     case ProjectType.WEB:
       return Color.ORANGE
-    case ProjectType.GALXE:
-      return Color.SECONDARY
+    // case ProjectType.GALXE:
+    //   return Color.SECONDARY
     case ProjectType.TESTNET:
       return Color.SUCCESS
     case ProjectType.GAME:
@@ -80,18 +69,20 @@ export const convertProjectCostTypeEnumToColorHex = (costType) => {
 
 }
 
-export const convertProjectFilterOtherToColorHex = (other) => {
+export const convertProjectTaskItemsToColorHex = (other) => {
 
   switch (other) {
-    case 'Chưa Làm Hôm Nay':
+    case 'Chưa Hoàn Thành':
       return Color.ORANGE
-    case 'Cheat':
-      return Color.SECONDARY
-    case 'Làm Hằng Ngày':
+    case 'UTC+0':
+      return Color.PRIMARY
+    case 'CD-24':
+      return Color.WARNING
+    case DAILY_TASK_TEXT:
       return Color.SUCCESS
-    case 'Làm Mới 7 Giờ Sáng':
+    case 'Task 7h Sáng':
       return Color.INFO
-    default: return null
+    default: return Color.SUCCESS
   }
 
 }
@@ -99,10 +90,10 @@ export const convertProjectFilterOtherToColorHex = (other) => {
 export const convertWalletStatusEnumToText = (status) => {
 
   switch (status) {
-    case WalletStatus.IN_ACTIVE:
-      return 'Đang hoạt động'
-    case WalletStatus.UN_ACTIVE:
-      return 'Ngừng hoạt động'
+    case StatusCommon.IN_ACTIVE:
+      return 'Kích hoạt'
+    case StatusCommon.UN_ACTIVE:
+      return 'Vô hiệu hóa'
     default: return null
   }
 
@@ -111,22 +102,10 @@ export const convertWalletStatusEnumToText = (status) => {
 export const convertWalletStatusEnumToReverse = (status) => {
 
   switch (status) {
-    case WalletStatus.IN_ACTIVE:
-      return WalletStatus.UN_ACTIVE
-    case WalletStatus.UN_ACTIVE:
-      return WalletStatus.IN_ACTIVE
-    default: return null
-  }
-
-}
-
-export const convertWalletStatusEnumToTextReverse = (status) => {
-
-  switch (status) {
-    case WalletStatus.IN_ACTIVE:
-      return 'Ngừng hoạt động'
-    case WalletStatus.UN_ACTIVE:
-      return 'Đang hoạt động'
+    case StatusCommon.IN_ACTIVE:
+      return StatusCommon.UN_ACTIVE
+    case StatusCommon.UN_ACTIVE:
+      return StatusCommon.IN_ACTIVE
     default: return null
   }
 
@@ -135,9 +114,9 @@ export const convertWalletStatusEnumToTextReverse = (status) => {
 export const convertWalletStatusEnumToColorHex = (status) => {
 
   switch (status) {
-    case WalletStatus.IN_ACTIVE:
+    case StatusCommon.IN_ACTIVE:
       return Color.PRIMARY
-    case WalletStatus.UN_ACTIVE:
+    case StatusCommon.UN_ACTIVE:
       return Color.ORANGE
     default: return null
   }
@@ -148,13 +127,13 @@ export const convertDailyTaskRefreshEnumToText = (type) => {
 
   switch (type) {
     case DailyTaskRefresh.UNKNOWN:
-      return 'Chưa rõ'
+      return DailyTaskRefresh.UNKNOWN
     case DailyTaskRefresh.UTC0:
-      return '7 giờ sáng (00:00 UTC)'
+      return 'UTC+0 (7 giờ sáng)'
     case DailyTaskRefresh.COUNT_DOWN_TIME_IT_UP:
-      return 'Hết 24 giờ đếm ngược'
+      return 'Countdown 24h'
     case DailyTaskRefresh.NEW_TASK:
-      return 'Chờ nhiệm vụ mới'
+      return 'Random trong ngày'
     default: return null
   }
 
@@ -252,7 +231,7 @@ export const darkenColor = (hex, percent = 0.60) => {
     .padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 }
 
-export const parseTimeout = (timeout = 0) => {
+export const parseNumber = (timeout = 0) => {
   return parseInt(timeout, 10) || 0;
 }
 

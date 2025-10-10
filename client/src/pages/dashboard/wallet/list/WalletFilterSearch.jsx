@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { CirclePlus, ListFilter } from 'lucide-react';
-import { CheckboxItems } from '@/components/Checkbox';
+import { DropdownCheckboxMenu } from '@/components/Checkbox';
 import Popover from "@/components/Popover";
 import { ButtonGhost, ButtonOutlineTags } from '@/components/Button';
-import { Color, WalletStatus } from '@/enums/enum';
+import { Color, StatusCommon } from '@/enums/enum';
 import { Badge } from '@/components/ui/badge';
 import { convertWalletStatusEnumToColorHex, convertWalletStatusEnumToText, darkenColor, lightenColor } from '@/utils/convertUtil';
 import useDebounce from '@/hooks/useDebounce';
@@ -35,8 +35,8 @@ export default function WalletFilterSearch({
     <div className="d-flex mt-20 justify-content-between align-items-center">
       <div className="filter-search d-flex gap-10">
         <Input
-          placeholder='Tìm kiếm ví ...'
-          style={{ width: '200px' }}
+          placeholder='Tìm kiếm ví web3...'
+          style={{ width: '250px' }}
           className='custom-input'
           value={filterSearch}
           onChange={(event) => setFilterSearch(event.target.value)}
@@ -57,7 +57,7 @@ export default function WalletFilterSearch({
               />
             }
             content={
-              <CheckboxItems
+              <DropdownCheckboxMenu
                 convert={convertWalletStatusEnumToText}
                 items={statusFilters.items}
                 selectedItems={selectedStatusItems}
@@ -85,7 +85,7 @@ export default function WalletFilterSearch({
 const statusFilters = {
   name: 'Trạng thái',
   items: [
-    WalletStatus.IN_ACTIVE, WalletStatus.UN_ACTIVE
+    StatusCommon.IN_ACTIVE, StatusCommon.UN_ACTIVE
   ],
 };
 

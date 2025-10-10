@@ -34,9 +34,9 @@ const ProfileWallet = db.define('profile_wallets', {
   deletedAt: {
     type: DataTypes.DATE,
   },
-  note: {
-    type: DataTypes.TEXT,
-  },
+  // note: {
+  //   type: DataTypes.TEXT,
+  // },
   //status, note?
 },
   {
