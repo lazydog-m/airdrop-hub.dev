@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const db = require('../configs/dbConnection');
 const { StatusCommon } = require('../enums');
 
-const Wallet = db.define('wallets', {
+const Web3Wallet = db.define('web3_wallets', {
   id: {
     primaryKey: true,
     type: DataTypes.UUID,
@@ -15,6 +15,12 @@ const Wallet = db.define('wallets', {
   password: {
     type: DataTypes.STRING,
     allowNull: false,
+  },
+  url: {
+    type: DataTypes.STRING(1000),
+  },
+  resource_id: {
+    type: DataTypes.STRING,
   },
   status: {
     type: DataTypes.ENUM,
@@ -29,4 +35,4 @@ const Wallet = db.define('wallets', {
     timestamps: true,
   });
 
-module.exports = Wallet;
+module.exports = Web3Wallet;

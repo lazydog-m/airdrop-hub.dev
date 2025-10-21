@@ -7,9 +7,10 @@ const { initSocket } = require('./src/configs/socket');
 const projectRoutes = require('./src/controllers/projectController');
 const profileRoutes = require('./src/controllers/profileController');
 const scriptRoutes = require('./src/controllers/scriptController');
-const walletRoutes = require('./src/controllers/walletController');
+const web3WalletRoutes = require('./src/controllers/web3WalletController');
 const taskRoutes = require('./src/controllers/taskController');
-const profileWalletRoutes = require('./src/controllers/profileWalletController');
+const profileWeb3WalletRoutes = require('./src/controllers/profileWeb3WalletController');
+const projectProfileRoutes = require('./src/controllers/projectProfileController');
 
 const databaseSync = require('./src/utils/dbMigration');
 const errorHandler = require('./src/middleware/errorHandler');
@@ -37,9 +38,10 @@ const registerRoutes = (prefix, router) => {
 // middlewares
 registerRoutes('/projects', projectRoutes);
 registerRoutes('/profiles', profileRoutes);
+registerRoutes('/project-profiles', projectProfileRoutes);
 registerRoutes('/scripts', scriptRoutes);
-registerRoutes('/wallets', walletRoutes);
-registerRoutes('/profile-wallets', profileWalletRoutes);
+registerRoutes('/web3-wallets', web3WalletRoutes);
+registerRoutes('/profile-web3-wallets', profileWeb3WalletRoutes);
 registerRoutes('/tasks', taskRoutes);
 
 initSocket(server);

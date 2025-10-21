@@ -9,20 +9,12 @@ const sequelize = require('../configs/dbConnection');
 const DailyTaskCompleted = require('../models/daily_task_completed');
 
 const projectSchema = Joi.object({
-  name: Joi.string().trim().required().max(255).messages({
+  name: Joi.string().trim().required().max(50).messages({
     'string.base': 'Tên dự án phải là chuỗi',
     'string.empty': 'Tên dự án không được bỏ trống!',
     'any.required': 'Tên dự án không được bỏ trống!',
-    'string.max': 'Tên dự án chỉ đươc phép dài tối đa 255 ký tự!',
+    'string.max': 'Tên dự án chỉ đươc phép dài tối đa 50 ký tự!',
   }),
-  daily_tasks: Joi.string()
-    .trim()
-    .max(255)
-    .allow('')
-    .messages({
-      'string.base': 'Task hằng ngày phải là chuỗi',
-      'string.max': 'Task hằng ngày chỉ đươc phép dài tối đa 255 ký tự!',
-    }),
   resources: Joi.array()
     .items(
       Joi.string().trim().messages({
@@ -171,25 +163,11 @@ const getAllProjects = async (req) => {
       p.status, 
       p.createdAt, 
       p.end_date, 
-      p.daily_tasks, 
       p.resources, 
       p.note, 
-      p.daily_tasks_refresh,
-      dtc.max_id AS daily_tasks_completed,
-		  dtc1.last_completed_at
+      p.daily_tasks_refresh
     FROM 
       projects p
-   LEFT JOIN (
-   SELECT dtc.project_id, MAX(dtc.createdAt) AS last_completed_at, MAX(dtc.id) AS max_id  
-    FROM daily_tasks_completed dtc
-    WHERE DATE(dtc.createdAt) = CURDATE()
-    GROUP BY dtc.project_id
-    ) dtc ON dtc.project_id = p.id
-   LEFT JOIN (
-   SELECT dtc1.project_id, MAX(dtc1.createdAt) AS last_completed_at, MAX(dtc1.id) AS max_id
-    FROM daily_tasks_completed dtc1
-    GROUP BY dtc1.project_id
-    ) dtc1 ON dtc1.project_id = p.id
    ${whereClause} 
    ${orderByClause}
    LIMIT ${Pagination.limit} OFFSET ${offset};`;
@@ -201,17 +179,6 @@ const getAllProjects = async (req) => {
   const countQuery = `
   SELECT COUNT(*) AS total 
    FROM projects p
-  LEFT JOIN (
-  SELECT dtc.project_id, MAX(dtc.createdAt) AS last_completed_at, MAX(dtc.id) AS max_id  
-   FROM daily_tasks_completed dtc
-   WHERE DATE(dtc.createdAt) = CURDATE()
-   GROUP BY dtc.project_id
-   ) dtc ON dtc.project_id = p.id
-  LEFT JOIN (
-  SELECT dtc1.project_id, MAX(dtc1.createdAt) AS last_completed_at, MAX(dtc1.id) AS max_id
-   FROM daily_tasks_completed dtc1
-   GROUP BY dtc1.project_id
-   ) dtc1 ON dtc1.project_id = p.id
   ${whereClause};`;
 
   const countResult = await sequelize.query(countQuery, {
@@ -238,23 +205,6 @@ const getAllProjects = async (req) => {
       hasPre: currentPage > 1
     }
   };
-}
-
-const getDailyTasks = async () => {
-  const query = `
-    SELECT 
-      Distinct(p.daily_tasks)
-    FROM 
-      projects p
-    WHERE 
-    p.deletedAt IS NULL AND p.daily_tasks IS NOT NULL AND p.daily_tasks != ''
-  `;
-
-  const [results] = await sequelize.query(query);
-
-  const dailyTasksArray = results.map(item => item.daily_tasks);
-
-  return dailyTasksArray;
 }
 
 const countProject = async () => {
@@ -310,6 +260,17 @@ const convertItem = (item) => {
 const createProject = async (body) => {
   const data = validateProject(body);
 
+  const existing = await Project.findOne({
+    where: {
+      name: data.name,
+      deletedAt: null,
+    }
+  });
+
+  if (existing) {
+    throw new RestApiException('Tên dự án đã tồn tại!');
+  }
+
   const createdProject = await Project.create({
     ...data,
   });
@@ -320,6 +281,18 @@ const createProject = async (body) => {
 const updateProject = async (body) => {
   const { id } = body;
   const data = validateProject(body);
+
+  const existing = await Project.findOne({
+    where: {
+      name: data.name,
+      id: { [Op.ne]: id },
+      deletedAt: null,
+    }
+  });
+
+  if (existing) {
+    throw new RestApiException('Tên dự án đã tồn tại!');
+  }
 
   const [updatedCount] = await Project.update({
     ...data,
@@ -360,31 +333,6 @@ const updateProjectStatus = async (body) => {
   return updatedProject;
 }
 
-const updateProjectStar = async (body) => {
-  const { id, is_star, stt } = body;
-
-  const [updatedCount] = await Project.update({
-    is_star: is_star,
-  }, {
-    where: {
-      id: id,
-    }
-  });
-
-  if (!updatedCount) {
-    throw new NotFoundException('Không tìm thấy dự án này!');
-  }
-
-  const result = await sequelize.query(queryAfterSave, {
-    replacements: { id },
-  });
-
-  const item = { ...result[0][0], stt };
-  const convertedData = convertItem(item, stt);
-
-  return convertedData;
-}
-
 const deleteProject = async (id) => {
 
   const [deletedCount] = await Project.update({
@@ -422,38 +370,14 @@ const validateProjectStatus = (data) => {
   return value;
 };
 
-const queryAfterSave = `
-    SELECT 
-      p.id, 
-      p.name, 
-      p.url, 
-      p.type, 
-      p.status, 
-      p.createdAt, 
-      p.end_date, 
-      p.daily_tasks, 
-      p.resources, 
-      p.note, 
-      p.daily_tasks_refresh,
-      dtc.max_id AS daily_tasks_completed,
-		  dtc1.last_completed_at
-    FROM 
-      projects p
-   LEFT JOIN (
-   SELECT dtc.project_id, MAX(dtc.createdAt) AS last_completed_at, MAX(dtc.id) AS max_id  
-   FROM daily_tasks_completed dtc
-   WHERE DATE(dtc.createdAt) = CURDATE()
-   GROUP BY dtc.project_id
-   ) dtc ON dtc.project_id = p.id
-   LEFT JOIN (
-   SELECT dtc1.project_id, MAX(dtc1.createdAt) AS last_completed_at, MAX(dtc1.id) AS max_id
-   FROM daily_tasks_completed dtc1
-   GROUP BY dtc1.project_id
-   ) dtc1 ON dtc1.project_id = p.id
-    WHERE p.id = :id
-    `;
-
-module.exports = { getAllProjects, getProjectById, createProject, updateProject, updateProjectStatus, countProject, deleteProject, completeDailyTasks, getDailyTasks, updateProjectStar };
+module.exports = {
+  getAllProjects,
+  getProjectById,
+  createProject,
+  updateProject,
+  updateProjectStatus,
+  deleteProject,
+};
 
 
 

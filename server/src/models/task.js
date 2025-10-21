@@ -26,6 +26,14 @@ const Task = db.define('tasks', {
   url: {
     type: DataTypes.STRING(1000),
   },
+  type: {
+    type: DataTypes.ENUM,
+    values: [
+      TaskType.DAILY,
+      TaskType.SIGN,
+    ],
+    defaultValue: TaskType.DAILY,
+  },
   script_name: {
     type: DataTypes.STRING(50),
   },

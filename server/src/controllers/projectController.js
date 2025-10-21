@@ -1,26 +1,20 @@
 const express = require('express');
-const { HttpStatus } = require('../enums');
-const RestApiException = require('../exceptions/RestApiException');
 const api = express.Router();
-const { getAllProjects, getProjectById, createProject, updateProject, updateProjectStatus, deleteProject, completeDailyTasks, getDailyTasks, updateProjectStar } = require('../services/projectService');
+const {
+  getAllProjects,
+  getProjectById,
+  createProject,
+  updateProject,
+  updateProjectStatus,
+  deleteProject
+} = require('../services/projectService');
 const apiRes = require('../utils/apiResponse');
-const sequelize = require('../configs/dbConnection');
 
 // Get all projects
 api.get('/', async (req, res, next) => {
   try {
     const projects = await getAllProjects(req);
     return apiRes.toJson(res, projects);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Get all daily tasks from projects
-api.get('/daily-tasks', async (req, res, next) => {
-  try {
-    const dailyTasks = await getDailyTasks(req);
-    return apiRes.toJson(res, dailyTasks);
   } catch (error) {
     next(error);
   }
@@ -47,17 +41,6 @@ api.post('/', async (req, res, next) => {
   }
 });
 
-// Create daily tasks completed for project
-api.post('/complete-daily-tasks', async (req, res, next) => {
-  const { body } = req;
-  try {
-    const createdDailyTasksCompleted = await completeDailyTasks(body);
-
-    return apiRes.toJson(res, createdDailyTasksCompleted);
-  } catch (error) {
-    next(error);
-  }
-});
 
 // Update a project
 api.put('/', async (req, res, next) => {
@@ -76,17 +59,6 @@ api.put('/status', async (req, res, next) => {
   try {
     const updatedProjectStatus = await updateProjectStatus(body);
     return apiRes.toJson(res, updatedProjectStatus);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Update project star
-api.put('/star', async (req, res, next) => {
-  const { body } = req;
-  try {
-    const updatedProjectStar = await updateProjectStar(body);
-    return apiRes.toJson(res, updatedProjectStar);
   } catch (error) {
     next(error);
   }

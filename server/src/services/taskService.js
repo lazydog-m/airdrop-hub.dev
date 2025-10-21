@@ -21,12 +21,13 @@ const taskSchema = Joi.object({
     'any.required': 'Project id không được bỏ trống!',
     'string.max': 'Project id chỉ đươc phép dài tối đa 36 ký tự!',
   }),
-  points: Joi.number().integer().min(1)
+  points: Joi.number().integer().min(1).max(2000000000)
     .allow(null)
     .messages({
       'number.base': 'Points phải là số!',
       'number.integer': 'Points phải là số nguyên!',
       'number.min': 'Points phải lớn hơn 0!',
+      'number.max': 'Points phải bé hơn 2,000,000,000!',
     }),
   script_name: Joi.string().trim()
     .pattern(/^[a-z0-9]+(?:_[a-z0-9]+)*$/) // chỉ snake_case
@@ -177,6 +178,18 @@ const getTaskById = async (id) => {
 const createTask = async (body) => {
   const data = validateTask(body);
 
+  const existing = await Task.findOne({
+    where: {
+      name: data.name,
+      project_id: data.project_id,
+      deletedAt: null,
+    }
+  });
+
+  if (existing) {
+    throw new RestApiException('Tên task đã tồn tại!');
+  }
+
   const createdTask = await Task.create({
     ...data,
   });
@@ -212,6 +225,19 @@ const updateTask = async (body) => {
   const { id } = body;
   const data = validateTask(body);
 
+  const existing = await Task.findOne({
+    where: {
+      name: data.name,
+      id: { [Op.ne]: id },
+      project_id: data.project_id,
+      deletedAt: null,
+    }
+  });
+
+  if (existing) {
+    throw new RestApiException('Tên task đã tồn tại!');
+  }
+
   const [updatedCount] = await Task.update({
     ...data,
   }, {
@@ -229,26 +255,26 @@ const updateTask = async (body) => {
   return updatedTask;
 }
 
-const updateTaskOrder = async (body) => {
-  const { orderedPayload } = body;
-
-  if (!Array.isArray(orderedPayload)) {
-    throw new RestApiException('orderedPayload phải là mảng');
-  }
-
-  validateTaskOrder(orderedPayload);
-
-  const updatePromises = orderedPayload.map(({ id, order }) =>
-    Task.update(
-      { order: order },
-      { where: { id } }
-    )
-  );
-
-  const results = await Promise.all(updatePromises);
-
-  return results; // response này bên fe ko sử dụng, là 1 mảng các count update
-}
+// const updateTaskOrder = async (body) => {
+//   const { orderedPayload } = body;
+//
+//   if (!Array.isArray(orderedPayload)) {
+//     throw new RestApiException('orderedPayload phải là mảng');
+//   }
+//
+//   validateTaskOrder(orderedPayload);
+//
+//   const updatePromises = orderedPayload.map(({ id, order }) =>
+//     Task.update(
+//       { order: order },
+//       { where: { id } }
+//     )
+//   );
+//
+//   const results = await Promise.all(updatePromises);
+//
+//   return results; // response này bên fe ko sử dụng, là 1 mảng các count update
+// }
 
 const updateTaskStatus = async (body) => {
   const { id, status } = body;
@@ -346,7 +372,15 @@ const validateTaskOrder = (payload) => {
 
 };
 
-module.exports = { getAllTasksByProjectId, createTask, updateTask, updateTaskStatus, deleteTask, updateTaskOrder, getTaskById, updateTaskOrderStar };
+module.exports = {
+  getAllTasksByProjectId,
+  createTask,
+  updateTask,
+  updateTaskStatus,
+  deleteTask,
+  getTaskById,
+  updateTaskOrderStar
+};
 
 
 

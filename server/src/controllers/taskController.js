@@ -1,11 +1,15 @@
 const express = require('express');
-const { HttpStatus } = require('../enums');
-const RestApiException = require('../exceptions/RestApiException');
 const api = express.Router();
-const { getAllProjects, getProjectById, createProject, updateProject, updateProjectStatus, deleteProject, createDailyTasksCompleted, getDailyTasks, updateProjectStar } = require('../services/projectService');
 const apiRes = require('../utils/apiResponse');
-const sequelize = require('../configs/dbConnection');
-const { createTask, updateTask, updateTaskStatus, deleteTask, updateTaskOrder, getTaskById, getAllTasksByProjectId, updateTaskOrderStar } = require('../services/taskService');
+const {
+  createTask,
+  updateTask,
+  updateTaskStatus,
+  deleteTask,
+  updateTaskOrder,
+  getAllTasksByProjectId,
+  updateTaskOrderStar
+} = require('../services/taskService');
 
 // Get all tasks by project 
 api.get('/:projectId', async (req, res, next) => {
@@ -16,16 +20,6 @@ api.get('/:projectId', async (req, res, next) => {
     next(error);
   }
 });
-
-// Get task by ID
-// api.get('/:id', async (req, res, next) => {
-//   try {
-//     const task = await getTaskById(req.params.id);
-//     return apiRes.toJson(res, task);
-//   } catch (error) {
-//     next(error);
-//   }
-// });
 
 // Create a new task
 api.post('/', async (req, res, next) => {
@@ -49,34 +43,12 @@ api.put('/', async (req, res, next) => {
   }
 });
 
-// Update task order
-api.put('/order', async (req, res, next) => {
-  const { body } = req;
-  try {
-    const updatedTaskOrder = await updateTaskOrder(body);
-    return apiRes.toJson(res, updatedTaskOrder);
-  } catch (error) {
-    next(error);
-  }
-});
-
 // Update task order star
 api.put('/order-star', async (req, res, next) => {
   const { body } = req;
   try {
     const updatedTask = await updateTaskOrderStar(body);
     return apiRes.toJson(res, updatedTask);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Update task status
-api.put('/status', async (req, res, next) => {
-  const { body } = req;
-  try {
-    const updatedTaskStatus = await updateTaskStatus(body);
-    return apiRes.toJson(res, updatedTaskStatus);
   } catch (error) {
     next(error);
   }

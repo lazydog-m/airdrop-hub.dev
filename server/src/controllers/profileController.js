@@ -1,10 +1,20 @@
 const express = require('express');
-const { HttpStatus } = require('../enums');
-const RestApiException = require('../exceptions/RestApiException');
 const api = express.Router();
 const apiRes = require('../utils/apiResponse');
-const { getAllProfiles, getProfileById, createProfile, updateProfile, deleteProfile, closeProfileById, openProfileById, openProfilesByIds, closeProfilesByIds, sortProfileLayouts } = require('../services/profileService');
-const { browsers, openProfile } = require('../utils/playwrightUtil');
+const {
+  getAllProfiles,
+  getProfileById,
+  createProfile,
+  updateProfile,
+  deleteProfile,
+  closeProfileById,
+  openProfileById,
+  openProfilesByIds,
+  closeProfilesByIds,
+  sortProfileLayouts,
+  updateProfileStatus
+} = require('../services/profileService');
+const { openProfile } = require('../utils/playwrightUtil');
 
 // Get all profiles
 api.get('/', async (req, res, next) => {
@@ -16,7 +26,7 @@ api.get('/', async (req, res, next) => {
   }
 });
 
-// Get profile by ID
+// // Get profile by ID
 // api.get('/:id', async (req, res, next) => {
 //   try {
 //     const profile = await getProfileById(req.params.id);
@@ -43,6 +53,17 @@ api.put('/', async (req, res, next) => {
   try {
     const updatedProfile = await updateProfile(body);
     return apiRes.toJson(res, updatedProfile);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Update profile status
+api.put('/status', async (req, res, next) => {
+  const { body } = req;
+  try {
+    const updatedProfileStatus = await updateProfileStatus(body);
+    return apiRes.toJson(res, updatedProfileStatus);
   } catch (error) {
     next(error);
   }

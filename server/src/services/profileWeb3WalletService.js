@@ -3,11 +3,11 @@ const ValidationException = require('../exceptions/ValidationException');
 const Joi = require('joi');
 const RestApiException = require('../exceptions/RestApiException');
 const { Sequelize } = require('sequelize');
-const ProfileWallet = require('../models/profile_wallet');
+const ProfileWeb3Wallet = require('../models/profileWeb3Wallet');
 const sequelize = require('../configs/dbConnection');
 const { Pagination, StatusCommon } = require('../enums');
 
-const profileWalletSchema = Joi.object({
+const profileWeb3WalletSchema = Joi.object({
   wallet_address: Joi.string().trim().required().max(1000).messages({
     'string.base': 'Địa chỉ ví phải là chuỗi',
     'string.empty': 'Địa chỉ ví không được bỏ trống!',
@@ -36,7 +36,7 @@ const profileWalletSchema = Joi.object({
     }),
 });
 
-const getAllProfileWalletsByIdProfile = async (req) => {
+const getAllWeb3WalletsByProfileId = async (req) => {
 
   const { page, search } = req.query;
   const { profileId } = req.params;
@@ -47,12 +47,13 @@ const getAllProfileWalletsByIdProfile = async (req) => {
   const query = `
     SELECT 
     pw.id, pw.createdAt, pw.profile_id, pw.wallet_id, pw.wallet_address, pw.secret_phrase, 
-           w.name, w.password 
-    FROM profile_wallets pw
-    JOIN wallets w ON pw.wallet_id = w.id
+           w.name, w.password, w.url, w.resource_id 
+    FROM profile_web3_wallets pw
+    JOIN web3_wallets w ON pw.wallet_id = w.id
     WHERE pw.deletedAt IS NULL
-      AND pw.profile_id = :profileId 
+      AND w.deletedAt IS NULL 
       AND w.status = :status 
+      AND pw.profile_id = :profileId 
       AND w.name LIKE :searchQuery 
     ORDER BY pw.createdAt DESC
     LIMIT ${Pagination.limit} OFFSET ${offset}
@@ -67,11 +68,12 @@ const getAllProfileWalletsByIdProfile = async (req) => {
 
   const countQuery = `
 SELECT COUNT(*) AS total 
-    FROM profile_wallets pw
-    JOIN wallets w ON pw.wallet_id = w.id
+    FROM profile_web3_wallets pw
+    JOIN web3_wallets w ON pw.wallet_id = w.id
     WHERE pw.deletedAt IS NULL
-    AND pw.profile_id = :profileId 
+    AND w.deletedAt IS NULL 
     AND w.status = :status 
+    AND pw.profile_id = :profileId 
     AND w.name LIKE :searchQuery 
 `;
 
@@ -98,51 +100,51 @@ SELECT COUNT(*) AS total
   };
 }
 
-const getProfileWalletById = async (id) => {
-  const profileWallet = await ProfileWallet.findByPk(id);
+const createProfileWeb3Wallet = async (body) => {
+  const {
+    profile_id,
+    wallet_id,
+    wallet_name
+  } = body;
+  const data = validateProfileWeb3Wallet(body);
 
-  if (!profileWallet) {
-    throw new NotFoundException('Không tìm thấy địa chỉ ví này!');
-  }
-
-  return profileWallet;
-}
-
-const createProfileWallet = async (body) => {
-  const { profile_id, wallet_id, wallet_name } = body;
-  const data = validateProfileWallet(body);
-
-  const profileWalletExists = await sequelize.query(queryProfileWalletExists, {
+  const profileWeb3WalletExists = await sequelize.query(queryProfileWeb3WalletExists, {
     replacements: { profileId: profile_id, walletId: wallet_id }
   });
 
-  if (profileWalletExists[0].length > 0) {
-    throw new RestApiException(`Ví ${wallet_name} đã tồn tại trong hồ sơ này!`);
+  if (profileWeb3WalletExists[0].length > 0) {
+    throw new RestApiException(`Ví Web3 ${wallet_name} đã tồn tại trong hồ sơ này!`);
   }
 
-  const createdProfileWallet = await ProfileWallet.create({
+  const createdProfileWeb3Wallet = await ProfileWeb3Wallet.create({
     ...data,
   });
 
-  return createdProfileWallet;
+  return createdProfileWeb3Wallet;
 }
 
-const updateProfileWallet = async (body) => {
-  const { id, profile_id, wallet_name, wallet_id, need_check_wallet_id } = body;
-  const data = validateProfileWallet(body);
+const updateProfileWeb3Wallet = async (body) => {
+  const {
+    id,
+    profile_id,
+    wallet_name,
+    wallet_id,
+    need_check_wallet_id
+  } = body;
+  const data = validateProfileWeb3Wallet(body);
 
   if (need_check_wallet_id) {
 
-    const profileWalletExists = await sequelize.query(queryProfileWalletExists, {
+    const profileWeb3WalletExists = await sequelize.query(queryProfileWeb3WalletExists, {
       replacements: { profileId: profile_id, walletId: wallet_id }
     });
 
-    if (profileWalletExists[0].length > 0) {
-      throw new RestApiException(`Ví ${wallet_name} đã tồn tại trong hồ sơ này!`);
+    if (profileWeb3WalletExists[0].length > 0) {
+      throw new RestApiException(`Ví Web3 ${wallet_name} đã tồn tại trong hồ sơ này!`);
     }
   }
 
-  const [updatedCount] = await ProfileWallet.update({
+  const [updatedCount] = await ProfileWeb3Wallet.update({
     ...data,
   }, {
     where: {
@@ -151,16 +153,16 @@ const updateProfileWallet = async (body) => {
   });
 
   if (!updatedCount) {
-    throw new NotFoundException('Không tìm thấy địa chỉ ví này!');
+    throw new NotFoundException('Không tìm thấy ví Web3 này!');
   }
 
-  const updatedProfileWallet = await ProfileWallet.findByPk(id);
+  const updatedProfileWeb3Wallet = await ProfileWeb3Wallet.findByPk(id);
 
-  return updatedProfileWallet;
+  return updatedProfileWeb3Wallet;
 }
 
-const deleteProfileWallet = async (id) => {
-  const [deletedCount] = await ProfileWallet.update({
+const deleteProfileWeb3Wallet = async (id) => {
+  const [deletedCount] = await ProfileWeb3Wallet.update({
     deletedAt: Sequelize.fn('NOW'),
   }, {
     where: {
@@ -169,14 +171,14 @@ const deleteProfileWallet = async (id) => {
   });
 
   if (!deletedCount) {
-    throw new NotFoundException('Không tìm thấy địa chỉ ví này!');
+    throw new NotFoundException('Không tìm ví Web3 này!');
   }
 
   return id;
 }
 
-const validateProfileWallet = (data) => {
-  const { error, value } = profileWalletSchema.validate(data, { stripUnknown: true });
+const validateProfileWeb3Wallet = (data) => {
+  const { error, value } = profileWeb3WalletSchema.validate(data, { stripUnknown: true });
 
   if (error) {
     throw new ValidationException(error.details[0].message);
@@ -185,14 +187,17 @@ const validateProfileWallet = (data) => {
   return value;
 };
 
-const queryProfileWalletExists = `
-  SELECT pw.id FROM profile_wallets pw
+const queryProfileWeb3WalletExists = `
+  SELECT pw.id FROM profile_web3_wallets pw
   WHERE pw.profile_id = :profileId
   AND pw.wallet_id = :walletId
+  AND pw.deletedAt IS NULL
   LIMIT 1;
 `;
 
-module.exports = { getAllProfileWalletsByIdProfile, getProfileWalletById, createProfileWallet, updateProfileWallet, deleteProfileWallet };
-
-
-
+module.exports = {
+  getAllWeb3WalletsByProfileId,
+  createProfileWeb3Wallet,
+  updateProfileWeb3Wallet,
+  deleteProfileWeb3Wallet
+};

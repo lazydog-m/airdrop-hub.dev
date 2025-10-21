@@ -2,15 +2,21 @@ const NotFoundException = require('../exceptions/NotFoundException');
 const ValidationException = require('../exceptions/ValidationException');
 const Joi = require('joi');
 const { Op, Sequelize } = require('sequelize');
-const Wallet = require('../models/wallet');
-const { WalletStatus, TRASH_DATA_TYPE, Pagination } = require('../enums');
+const { Pagination } = require('../enums');
 const RestApiException = require('../exceptions/RestApiException');
-const ProfileWallet = require('../models/profile_wallet');
 const sequelize = require('../configs/dbConnection');
 const config = require('../../playwrightConfig');
 const path = require('path')
 const fs = require('fs');
-const { openProfileTest, setBrowserTest, getBrowserTest, setIsStop, reConnectBrowser, delay, getValidPages } = require('../utils/playwrightUtil');
+const {
+  openProfileTest,
+  setBrowserTest,
+  getBrowserTest,
+  setIsStop,
+  reConnectBrowser,
+  delay,
+  getValidPages
+} = require('../utils/playwrightUtil');
 const { getSocket } = require('../configs/socket');
 
 const scriptSchema = Joi.object({

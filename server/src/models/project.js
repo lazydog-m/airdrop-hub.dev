@@ -1,6 +1,6 @@
 const { DataTypes } = require('sequelize');
 const db = require('../configs/dbConnection');
-const { ProjectStatus, ProjectType, ProjectCost, DailyTaskRefresh } = require('../enums');
+const { ProjectStatus, ProjectType, DailyTaskRefresh } = require('../enums');
 
 const Project = db.define('projects', {
   id: {

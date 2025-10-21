@@ -1,20 +1,16 @@
 const { DataTypes } = require('sequelize');
 const db = require('../configs/dbConnection');
 
-const ProfileWallet = db.define('profile_wallets', {
+const ProjectProfile = db.define('project_profiles', {
   id: {
     primaryKey: true,
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
   },
-  wallet_address: {
-    type: DataTypes.STRING(1000),
-    allowNull: false,
-  },
-  secret_phrase: {
-    type: DataTypes.STRING(1000),
-    allowNull: false,
-  },
+  // secret_phrase: {
+  //   type: DataTypes.STRING(1000),
+  //   allowNull: false,
+  // },
   profile_id: {
     type: DataTypes.UUID,
     references: {
@@ -23,17 +19,17 @@ const ProfileWallet = db.define('profile_wallets', {
     },
     allowNull: false,
   },
-  wallet_id: {
+  project_id: {
     type: DataTypes.UUID,
     references: {
-      model: 'wallets',
+      model: 'projects',
       key: 'id'
     },
     allowNull: false,
   },
-  deletedAt: {
-    type: DataTypes.DATE,
-  },
+  // deletedAt: {
+  //   type: DataTypes.DATE,
+  // },
   // note: {
   //   type: DataTypes.TEXT,
   // },
@@ -43,4 +39,4 @@ const ProfileWallet = db.define('profile_wallets', {
     timestamps: true,
   });
 
-module.exports = ProfileWallet;
+module.exports = ProjectProfile;

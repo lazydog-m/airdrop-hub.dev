@@ -2,54 +2,103 @@ const NotFoundException = require('../exceptions/NotFoundException');
 const ValidationException = require('../exceptions/ValidationException');
 const Joi = require('joi');
 const RestApiException = require('../exceptions/RestApiException');
-const { Sequelize, Op } = require('sequelize');
+const { Sequelize, Op, QueryTypes } = require('sequelize');
 const Profile = require('../models/profile');
 const sequelize = require('../configs/dbConnection');
-const { Pagination } = require('../enums');
+const { Pagination, StatusCommon } = require('../enums');
 const { openProfile, browsers, currentProfiles, closingByApiIds, delay, getPortFree, usedPorts, getBrowsers, addBrowser, removeBrowserById, sortGridLayout } = require('../utils/playwrightUtil');
 
 const profileSchema = Joi.object({
-  email: Joi.string().trim().required().max(255).messages({
-    'string.base': 'Email phải là chuỗi',
-    'string.empty': 'Email không được bỏ trống!',
-    'any.required': 'Email không được bỏ trống!',
-    'string.max': 'Email chỉ đươc phép dài tối đa 255 ký tự!',
+  email: Joi.string().trim().lowercase().required().max(255).messages({
+    'string.base': '(Google) Email phải là chuỗi!',
+    'string.empty': '(Google) Email không được bỏ trống!',
+    'any.required': '(Google) Email không được bỏ trống!',
+    'string.max': '(Google) Email chỉ đươc phép dài tối đa 255 ký tự!',
   }),
   email_password: Joi.string().trim().required()
     .max(255)
     .messages({
-      'string.base': 'Mật khẩu email phải là chuỗi',
-      'string.empty': 'Mật khẩu email không được bỏ trống!',
-      'any.required': 'Mật khẩu email không được bỏ trống!',
-      'string.max': 'Mật khẩu email chỉ đươc phép dài tối đa 255 ký tự!',
+      'string.base': '(Google) Mật khẩu email phải là chuỗi!',
+      'string.empty': '(Google) Mật khẩu email không được bỏ trống!',
+      'any.required': '(Google) Mật khẩu email không được bỏ trống!',
+      'string.max': '(Google) Mật khẩu email chỉ đươc phép dài tối đa 255 ký tự!',
     }),
-  x_username: Joi.string().trim()
+  discord_email: Joi.string().trim().lowercase()
     .max(255)
     .allow('')
     .messages({
-      'string.base': 'Username twitter phải là chuỗi',
-      'string.max': 'Username twitter chỉ đươc phép dài tối đa 255 ký tự!',
+      'string.base': '(Discord) Email phải là chuỗi!',
+      'string.max': '(Discord) Email chỉ đươc phép dài tối đa 255 ký tự!',
+    }),
+  discord_email_password: Joi.string().trim()
+    .max(255)
+    .allow('')
+    .messages({
+      'string.base': '(Discord) Mật khẩu email phải là chuỗi!',
+      'string.max': '(Discord) Mật khẩu email chỉ đươc phép dài tối đa 255 ký tự!',
     }),
   discord_username: Joi.string().trim()
     .max(255)
     .allow('')
     .messages({
-      'string.base': 'Username discord phải là chuỗi',
+      'string.base': 'Username discord phải là chuỗi!',
       'string.max': 'Username discord chỉ đươc phép dài tối đa 255 ký tự!',
     }),
   discord_password: Joi.string().trim()
     .max(255)
     .allow('')
     .messages({
-      'string.base': 'Mật khẩu discord phải là chuỗi',
+      'string.base': 'Mật khẩu discord phải là chuỗi!',
       'string.max': 'Mật khẩu discord chỉ đươc phép dài tối đa 255 ký tự!',
+    }),
+  x_email: Joi.string().trim().lowercase()
+    .max(255)
+    .allow('')
+    .messages({
+      'string.base': '(Twitter) Email phải là chuỗi!',
+      'string.max': '(Twitter) Email chỉ đươc phép dài tối đa 255 ký tự!',
+    }),
+  x_email_password: Joi.string().trim()
+    .max(255)
+    .allow('')
+    .messages({
+      'string.base': '(Twitter) Mật khẩu email phải là chuỗi!',
+      'string.max': '(Twitter) Mật khẩu email chỉ đươc phép dài tối đa 255 ký tự!',
+    }),
+  x_username: Joi.string().trim()
+    .max(255)
+    .allow('')
+    .messages({
+      'string.base': 'Username twitter phải là chuỗi!',
+      'string.max': 'Username twitter chỉ đươc phép dài tối đa 255 ký tự!',
+    }),
+  telegram_email: Joi.string().trim().lowercase()
+    .max(255)
+    .allow('')
+    .messages({
+      'string.base': '(Telegram) Email phải là chuỗi!',
+      'string.max': '(Telegram) Email chỉ đươc phép dài tối đa 255 ký tự!',
+    }),
+  telegram_email_password: Joi.string().trim()
+    .max(255)
+    .allow('')
+    .messages({
+      'string.base': '(Telegram) Mật khẩu email phải là chuỗi!',
+      'string.max': '(Telegram) Mật khẩu email chỉ đươc phép dài tối đa 255 ký tự!',
     }),
   telegram_phone: Joi.string().trim()
     .max(10)
     .allow('')
     .messages({
-      'string.base': 'Số điện thoại telegram phải là chuỗi',
-      'string.max': 'Số điện thoại telegram chỉ đươc phép dài tối đa 10 ký tự!',
+      'string.base': 'SĐT telegram phải là chuỗi',
+      'string.max': 'SĐT telegram chỉ đươc phép dài tối đa 10 ký tự!',
+    }),
+  telegram_username: Joi.string().trim()
+    .max(255)
+    .allow('')
+    .messages({
+      'string.base': 'Username telegram phải là chuỗi!',
+      'string.max': 'Username telegram chỉ đươc phép dài tối đa 255 ký tự!',
     }),
   note: Joi.string().trim()
     .max(10000)
@@ -60,67 +109,131 @@ const profileSchema = Joi.object({
     }),
 });
 
+const statusValidation = Joi.object({
+  status: Joi.required()
+    .valid(StatusCommon.UN_ACTIVE, StatusCommon.IN_ACTIVE)
+    .messages({
+      'any.only': 'Trạng thái profile không hợp lệ!',
+      'any.required': 'Trạng thái profile không được bỏ trống!',
+    }),
+});
+
 const getAllProfiles = async (req) => {
 
-  const { page, search } = req.query;
+  const { page, search, selectedStatusItems } = req.query;
 
   const currentPage = Number(page) || 1;
   const offset = (currentPage - 1) * Pagination.limit;
+
+  let whereClause = 'WHERE p.deletedAt IS NULL';
+  const conditions = [];
+  const replacements = [];
+
+  if (search) {
+    conditions.push(`
+      (
+        p.email LIKE ?
+        OR p.discord_email LIKE ?
+        OR p.discord_username LIKE ?
+        OR p.x_email LIKE ?
+        OR p.x_username LIKE ?
+        OR p.telegram_email LIKE ?
+        OR p.telegram_username LIKE ?
+        OR p.telegram_phone LIKE ?
+      )
+  `);
+    replacements.push(...Array(8).fill(`%${search}%`));
+    // replacements.push(`%${search}%`);
+  }
+
+  if (selectedStatusItems?.length > 0) {
+    const statusPlaceholders = selectedStatusItems.map((_, index) => `?`).join(',');
+    conditions.push(`p.status IN (${statusPlaceholders})`);
+    replacements.push(...selectedStatusItems);
+  }
+
+  if (conditions.length > 0) {
+    whereClause += ' AND ' + conditions.join(' AND ');
+  }
 
   const query = `
     SELECT 
       p.id, 
       p.email, 
-      p.x_username, 
+      p.email_password, 
+      p.discord_email, 
+      p.discord_email_password, 
       p.discord_password, 
       p.discord_username, 
+      p.x_email, 
+      p.x_email_password, 
+      p.x_username, 
+      p.telegram_email, 
+      p.telegram_email_password, 
+      p.telegram_username, 
       p.telegram_phone, 
-      p.email_password, 
-      p.createdAt
+      p.createdAt,
+      p.status,
+      GROUP_CONCAT(DISTINCT w.resource_id) AS web3_wallet_ids
     FROM 
       profiles p
-    WHERE p.deletedAt IS NULL
-      AND (
-        p.email LIKE :searchQuery 
-        OR p.discord_username LIKE :searchQuery
-        OR p.x_username LIKE :searchQuery
-        OR p.telegram_phone LIKE :searchQuery
-      )
+    LEFT JOIN profile_web3_wallets pw ON pw.profile_id = p.id AND pw.deletedAt IS NULL
+    LEFT JOIN web3_wallets w ON pw.wallet_id = w.id AND w.deletedAt IS NULL AND w.status = '${StatusCommon.IN_ACTIVE}'
+    ${whereClause} 
+    GROUP BY
+      p.id
     ORDER BY p.createdAt DESC
     LIMIT ${Pagination.limit} OFFSET ${offset}
   `;
 
   const data = await sequelize.query(query, {
-    replacements: {
-      searchQuery: `%${search}%`
-    },
+    replacements: replacements,
+    type: QueryTypes.SELECT
   });
 
   const countQuery = `
   SELECT COUNT(*) AS total 
     FROM 
       profiles p
-    WHERE p.deletedAt IS NULL
-      AND (
-        p.email LIKE :searchQuery 
-        OR p.discord_username LIKE :searchQuery
-        OR p.x_username LIKE :searchQuery
-        OR p.telegram_phone LIKE :searchQuery
-      )
+    ${whereClause} 
    `;
 
   const countResult = await sequelize.query(countQuery, {
-    replacements: {
-      searchQuery: `%${search}%`
-    },
+    replacements: replacements,
+    type: QueryTypes.SELECT
   });
 
-  const total = countResult[0][0]?.total;
+  const total = countResult[0]?.total;
   const totalPages = Math.ceil(total / Pagination.limit);
+
+  const RESOURCE_MAP = {
+    google: ['email', 'email_password'],
+    discord: ['discord_email', 'discord_email_password', 'discord_username', 'discord_password'],
+    x: ['x_email', 'x_email_password', 'x_username'],
+    telegram: ['telegram_email', 'telegram_email_password', 'telegram_username', 'telegram_phone'],
+  };
+
+  const dataConverted = data?.map(p => {
+    const accountResources = Object.entries(RESOURCE_MAP)
+      .filter(([_, fields]) => fields.every(field => p[field]))
+      .map(([key]) => key);
+
+    const web3WalletResources = p.web3_wallet_ids
+      ? p.web3_wallet_ids.split(',')
+        .map(s => s.trim())
+        .filter(Boolean) // bỏ chuỗi rỗng
+      : [];
+
+    return {
+      ...p,
+      accounts: accountResources,
+      web3Wallets: web3WalletResources
+    };
+  });
 
   return {
     browsers: currentProfiles(),
-    data: data[0],
+    data: dataConverted,
     pagination: {
       page: parseInt(currentPage, 10),
       totalItems: total,
@@ -135,7 +248,7 @@ const getProfileById = async (id) => {
   const profile = await Profile.findByPk(id);
 
   if (!profile) {
-    throw new NotFoundException('Không tìm thấy hồ sơ này!');
+    throw new NotFoundException('Không tìm thấy profile này!');
   }
 
   return profile;
@@ -144,38 +257,51 @@ const getProfileById = async (id) => {
 const createProfile = async (body) => {
   const data = validateProfile(body);
 
-  const existingProfile = await Profile.findOne({
+  const fieldsToCheck = [
+    'email',
+    'discord_email',
+    'discord_username',
+    'x_email',
+    'x_username',
+    'telegram_email',
+    'telegram_username',
+    'telegram_phone',
+  ];
+
+  const messagesErr = {
+    email: '(Google) Email đã tồn tại!',
+    discord_email: '(Discord) Email đã tồn tại!',
+    x_email: '(Twitter) Email đã tồn tại!',
+    telegram_email: '(Telegram) Email đã tồn tại!',
+    discord_username: 'Username discord đã tồn tại!',
+    x_username: 'Username twitter đã tồn tại!',
+    telegram_username: 'Username telegram đã tồn tại!',
+    telegram_phone: 'SĐT telegram đã tồn tại!',
+  };
+
+  // Lọc ra các field cần check có dữ liệu trong data
+  const fieldsHasData = fieldsToCheck.filter(field => data[field]);
+
+  const orConditions = fieldsHasData
+    .map(key => ({ [key]: data[key] })).filter(Boolean);
+
+  const existing = await Profile.findOne({
     where: {
-      [Op.or]: [
-        { email: data.email },
-        { x_username: data.x_username },
-        { discord_username: data.discord_username },
-        { telegram_phone: data.telegram_phone },
-      ],
+      [Op.or]: orConditions,
+      deletedAt: null,
     },
   });
 
-  if (existingProfile) {
-    if (existingProfile.email === data.email) {
-      throw new RestApiException('Email đã tồn tại!');
-    }
-    if (existingProfile.x_username === data.x_username) {
-      throw new RestApiException('Username X đã tồn tại!');
-    }
-    if (existingProfile.discord_username === data.discord_username) {
-      throw new RestApiException('Username Discord đã tồn tại!');
-    }
-    if (existingProfile.telegram_phone === data.telegram_phone) {
-      throw new RestApiException('Số điện thoại Telegram đã tồn tại!');
+  if (existing) {
+    for (const key of fieldsHasData) {
+      if (existing[key] === data[key]) {
+        throw new RestApiException(messagesErr[key]);
+      }
     }
   }
 
   const createdProfile = await Profile.create({
     ...data,
-    x_username: data.x_username || null,
-    discord_username: data.discord_username || null,
-    discord_password: data.discord_password || null,
-    telegram_phone: data.telegram_phone || null,
   });
 
   return createdProfile;
@@ -185,38 +311,52 @@ const updateProfile = async (body) => {
   const { id } = body;
   const data = validateProfile(body);
 
-  const existingProfile = await Profile.findOne({
+  const fieldsToCheck = [
+    'email',
+    'discord_email',
+    'discord_username',
+    'x_email',
+    'x_username',
+    'telegram_email',
+    'telegram_username',
+    'telegram_phone',
+  ];
+
+  const messagesErr = {
+    email: '(Google) Email đã tồn tại!',
+    discord_email: '(Discord) Email đã tồn tại!',
+    x_email: '(Twitter) Email đã tồn tại!',
+    telegram_email: '(Telegram) Email đã tồn tại!',
+    discord_username: 'Username discord đã tồn tại!',
+    x_username: 'Username twitter đã tồn tại!',
+    telegram_username: 'Username telegram đã tồn tại!',
+    telegram_phone: 'SĐT telegram đã tồn tại!',
+  };
+
+  // Lọc ra các field cần check có dữ liệu trong data
+  const fieldsHasData = fieldsToCheck.filter(field => data[field]);
+
+  const orConditions = fieldsHasData
+    .map(key => ({ [key]: data[key] })).filter(Boolean);
+
+  const existing = await Profile.findOne({
     where: {
-      [Op.or]: [
-        { email: data.email, id: { [Op.ne]: id } },
-        { x_username: data.x_username, id: { [Op.ne]: id } },
-        { discord_username: data.discord_username, id: { [Op.ne]: id } },
-        { telegram_phone: data.telegram_phone, id: { [Op.ne]: id } },
-      ],
+      [Op.or]: orConditions,
+      id: { [Op.ne]: id },
+      deletedAt: null,
     },
   });
 
-  if (existingProfile) {
-    if (existingProfile.email === data.email) {
-      throw new RestApiException('Email đã tồn tại!');
-    }
-    if (existingProfile.x_username === data.x_username) {
-      throw new RestApiException('Username X đã tồn tại!');
-    }
-    if (existingProfile.discord_username === data.discord_username) {
-      throw new RestApiException('Username Discord đã tồn tại!');
-    }
-    if (existingProfile.telegram_phone === data.telegram_phone) {
-      throw new RestApiException('Số điện thoại Telegram đã tồn tại!');
+  if (existing) {
+    for (const key of fieldsHasData) {
+      if (existing[key] === data[key]) {
+        throw new RestApiException(messagesErr[key]);
+      }
     }
   }
 
   const [updatedCount] = await Profile.update({
     ...data,
-    x_username: data.x_username || null,
-    discord_username: data.discord_username || null,
-    discord_password: data.discord_password || null,
-    telegram_phone: data.telegram_phone || null,
   }, {
     where: {
       id: id,
@@ -224,7 +364,28 @@ const updateProfile = async (body) => {
   });
 
   if (!updatedCount) {
-    throw new NotFoundException('Không tìm thấy hồ sơ này!');
+    throw new NotFoundException('Không tìm thấy profile này!');
+  }
+
+  const updatedProfile = await Profile.findByPk(id);
+
+  return updatedProfile;
+}
+
+const updateProfileStatus = async (body) => {
+  const { id } = body;
+  const data = validateStatus(body);
+
+  const [updatedCount] = await Profile.update({
+    status: data.status === StatusCommon.IN_ACTIVE ? StatusCommon.UN_ACTIVE : StatusCommon.IN_ACTIVE,
+  }, {
+    where: {
+      id: id,
+    }
+  });
+
+  if (!updatedCount) {
+    throw new NotFoundException('Không tìm thấy profile này!');
   }
 
   const updatedProfile = await Profile.findByPk(id);
@@ -242,7 +403,7 @@ const deleteProfile = async (id) => {
   });
 
   if (!deletedCount) {
-    throw new NotFoundException('Không tìm thấy hồ sơ này!');
+    throw new NotFoundException('Không tìm thấy profile này!');
   }
 
   return id;
@@ -250,6 +411,16 @@ const deleteProfile = async (id) => {
 
 const validateProfile = (data) => {
   const { error, value } = profileSchema.validate(data, { stripUnknown: true });
+
+  if (error) {
+    throw new ValidationException(error.details[0].message);
+  }
+
+  return value;
+};
+
+const validateStatus = (data) => {
+  const { error, value } = statusValidation.validate(data, { stripUnknown: true });
 
   if (error) {
     throw new ValidationException(error.details[0].message);
@@ -378,6 +549,7 @@ module.exports = {
   getProfileById,
   createProfile,
   updateProfile,
+  updateProfileStatus,
   deleteProfile,
   openProfileById,
   closeProfileById,
@@ -385,6 +557,3 @@ module.exports = {
   closeProfilesByIds,
   sortProfileLayouts,
 };
-
-
-

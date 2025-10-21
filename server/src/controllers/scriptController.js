@@ -1,10 +1,18 @@
 const express = require('express');
-const { HttpStatus } = require('../enums');
-const RestApiException = require('../exceptions/RestApiException');
 const api = express.Router();
 const apiRes = require('../utils/apiResponse');
-const sequelize = require('../configs/dbConnection');
-const { createScript, getScriptByFileName, updateScript, getAllScripts, deleteScript, closeProfile, openProfile, runScript, stopScript, getAllScriptsByProject } = require('../services/scriptService');
+const {
+  createScript,
+  getScriptByFileName,
+  updateScript,
+  getAllScripts,
+  deleteScript,
+  closeProfile,
+  openProfile,
+  runScript,
+  stopScript,
+  getAllScriptsByProject
+} = require('../services/scriptService');
 
 // Get all scripts
 api.get('/', async (req, res, next) => {

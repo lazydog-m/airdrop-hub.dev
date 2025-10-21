@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const db = require('../configs/dbConnection');
+const { StatusCommon } = require('../enums');
 
 const Profile = db.define('profiles', {
   id: {
@@ -15,20 +16,32 @@ const Profile = db.define('profiles', {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  // 1 list tk x để có thể xem được tk x cũ khi cần authen hay gì đó ??.
-  email_x: {
+  discord_email: {
     type: DataTypes.STRING,
   },
-  email_x_password: {
-    type: DataTypes.STRING,
-  },
-  x_username: {
+  discord_email_password: {
     type: DataTypes.STRING,
   },
   discord_username: {
     type: DataTypes.STRING,
   },
   discord_password: {
+    type: DataTypes.STRING,
+  },
+  // 1 list tk x để có thể xem được tk x cũ khi cần authen hay gì đó ??.
+  x_email: {
+    type: DataTypes.STRING,
+  },
+  x_email_password: {
+    type: DataTypes.STRING,
+  },
+  x_username: {
+    type: DataTypes.STRING,
+  },
+  telegram_email: {
+    type: DataTypes.STRING,
+  },
+  telegram_email_password: {
     type: DataTypes.STRING,
   },
   telegram_username: {
@@ -39,6 +52,11 @@ const Profile = db.define('profiles', {
   },
   deletedAt: {
     type: DataTypes.DATE,
+  },
+  status: {
+    type: DataTypes.ENUM,
+    values: [StatusCommon.UN_ACTIVE, StatusCommon.IN_ACTIVE],
+    defaultValue: StatusCommon.IN_ACTIVE,
   },
   note: {
     type: DataTypes.TEXT,

@@ -82,7 +82,7 @@ const TaskStatus = {
 const TaskType = {
   DAILY: 'daily',
   SOCIAL: 'social',
-  REG: 'reg',
+  SIGN: 'reg',
 }
 
 const TaskRank = {
