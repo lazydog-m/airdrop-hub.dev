@@ -11,6 +11,12 @@ import Popover from './Popover';
 import { DropdownMenu } from './DropdownMenu';
 import { Check, ChevronsUpDown, Inbox } from 'lucide-react';
 import EmptyData from './EmptyData';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 
 export default function DataTable({
   columns = [],
@@ -25,13 +31,16 @@ export default function DataTable({
   onChangePage = () => { },
   onSelectAllRows = () => { },
 
+  onSelectAllData = () => { },
+  onClearAllData = () => { },
+
   selectedObjText = '',
+  selectAll = false,
   ...other
 }) {
 
   return (
-
-    < div {...other}>
+    <div {...other}>
       <TableContainer
         component={Paper}
         className='custom-table'
@@ -46,12 +55,27 @@ export default function DataTable({
                 key='checkbox-all'
                 align='left'
               >
-                <Checkbox
-                  defaultChecked={false}
-                  checked={isCheckedAll}
-                  onChange={(checked) => onSelectAllRows(checked)}
-                  indeterminate={isIndeterminate}
-                />
+                {selectAll ?
+                  <ContextMenuRight
+                    onSelectAllData={onSelectAllData}
+                    onClearAllData={onClearAllData}
+                    trigger={
+                      <Checkbox
+                        defaultChecked={false}
+                        checked={isCheckedAll}
+                        onChange={(checked) => onSelectAllRows(checked)}
+                        indeterminate={isIndeterminate}
+                      />
+                    }
+                  /> :
+                  <Checkbox
+                    defaultChecked={false}
+                    checked={isCheckedAll}
+                    onChange={(checked) => onSelectAllRows(checked)}
+                    indeterminate={isIndeterminate}
+                  />
+                }
+
               </TableCell>
               {columns?.map((item) => {
                 return (
@@ -125,3 +149,26 @@ export default function DataTable({
   );
 }
 
+const ContextMenuRight = ({ trigger, onSelectAllData, onClearAllData }) => {
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger>{trigger}</ContextMenuTrigger>
+      <ContextMenuContent
+        className='border-1 bg-color bdr !z-[9999] p-3'
+      >
+        <ContextMenuItem
+          className='dropdown-menu-item pointer'
+          onClick={onSelectAllData}
+        >
+          Select All Data
+        </ContextMenuItem>
+        <ContextMenuItem
+          className='dropdown-menu-item pointer'
+          onClick={onClearAllData}
+        >
+          Clear All Data
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  )
+}

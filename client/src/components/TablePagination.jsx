@@ -32,7 +32,7 @@ export default function TablePagination({
         <>
           <div className='align-items-center justify-content-center d-flex fs-14 fw-400'>
             {`Trang ${page || 0}/${totalPages || 0} - `}
-            {`Tổng ${totalItems || 0} ${selectedObjText}.`}
+            {`Tổng cộng ${totalItems || 0} ${selectedObjText}.`}
           </div>
           <div className='align-items-center justify-content-center d-flex fs-14 fw-400'>
           </div>

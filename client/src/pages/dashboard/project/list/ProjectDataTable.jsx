@@ -5,8 +5,8 @@ import DataTable from '@/components/DataTable';
 import { ButtonIcon } from '@/components/Button';
 import { convertProjectStatusEnumToColorHex, convertProjectStatusEnumToText, convertProjectTypeEnumToColorHex, darkenColor, lightenColor } from '@/utils/convertUtil';
 import { RiTodoLine } from "react-icons/ri";
-import { EllipsisVertical, X, PencilLine, CheckCheck, Trash2, CalendarArrowDown, CalendarArrowUp, Clock, Users, ClipboardClock, ClipboardCheck, ClipboardList } from 'lucide-react';
-import { TbClipboardCheck, TbClockCheck } from "react-icons/tb";
+import { EllipsisVertical, X, PencilLine, CheckCheck, Trash2, CalendarArrowDown, CalendarArrowUp, Clock, Users, ClipboardClock, ClipboardCheck, ClipboardList, UserRoundX, UserRoundCheck } from 'lucide-react';
+import { TbClockCheck } from "react-icons/tb";
 import { Badge } from '@/components/ui/badge';
 import { Color, DailyTaskRefresh, DAILY_TASK_TEXT, NOT_AVAILABLE, ProjectStatus, PROJECT_STATUS_ARR } from '@/enums/enum';
 import { Link } from 'react-router-dom';
@@ -21,9 +21,10 @@ import useConfirm from '@/hooks/useConfirm';
 import useMessage from '@/hooks/useMessage';
 import { Checkbox } from '@/components/Checkbox';
 import DropdownUi from '@/components/DropdownUi';
-import { RESOURCES } from '@/commons/Resources';
-import DailyTaskList from './daily-task/DailyTaskList';
-import { BadgeWhite } from '@/components/Badge';
+import { ResourceIcon } from '@/commons/Resources';
+import ProjectTaskList from './task/ProjectTaskList';
+import ProjectProfileList from './profile/ProjectProfileList';
+import { IconX } from '@/components/IconUi';
 
 const DataTableMemo = React.memo(DataTable);
 
@@ -41,17 +42,17 @@ export default function ProjectDataTable({
 }) {
 
   const [open, setOpen] = React.useState(false);
-  const [openDailyTask, setOpenDailyTask] = React.useState(false);
+  const [openTask, setOpenTask] = React.useState(false);
   const [openProfiles, setOpenProfiles] = React.useState(false);
   const [project, setProject] = React.useState({});
   const { onOpen, onClose } = useSpinner();
-  const { showConfirm, showSaved } = useConfirm();
+  const { showConfirm, onCloseLoader } = useConfirm();
   const { onSuccess, onError } = useMessage();
 
   const isEdit = true;
 
-  const handleClickOpenDailyTask = (item) => {
-    setOpenDailyTask(true);
+  const handleClickOpenTask = (item) => {
+    setOpenTask(true);
     setProject(item);
   };
 
@@ -94,61 +95,35 @@ export default function ProjectDataTable({
     }
   }
 
-  const handleCompleteDailyTask = (project_id) => {
-    const body = {
-      project_id,
-    };
-    showConfirm(
-      `Xác nhận hoàn thành nhiệm vụ của ngày hôm nay?`,
-      () => postCompleteDailyTasks(body))
-      ;
-  }
-
-  const postCompleteDailyTasks = async (body) => {
-    try {
-      onOpen();
-      const response = await apiPost(`/projects/complete-daily-tasks`, body);
-      onUpdateData(isEdit, response.data.data);
-      onClose();
-      showSaved("Đã hoàn thành!")
-    } catch (error) {
-      console.error(error);
-      onError(error.message);
-      onClose();
-    }
-  }
-
   const putStatus = async (body) => {
     try {
-      onOpen();
       const response = await apiPut(`/projects/status`, body);
       onUpdateData(triggerPut);
     } catch (error) {
       console.error(error);
       onError(error.message);
-      onClose();
+      onCloseLoader();
     }
   }
 
   const triggerPut = () => {
-    onClose();
+    onCloseLoader();
     onSuccess("Cập nhật thành công!")
   }
 
   const triggerRemove = () => {
-    onClose();
+    onCloseLoader();
     onSuccess("Xóa thành công!")
   }
 
   const remove = async (id) => {
     try {
-      onOpen();
       const response = await apiDelete(`/projects/${id}`);
       onDeleteData(response.data.data, triggerRemove);
     } catch (error) {
       console.error(error);
       onError(error.message);
-      onClose();
+      onCloseLoader();
     }
   }
 
@@ -279,10 +254,10 @@ export default function ProjectDataTable({
             className='items-center d-flex select-none gap-6'
           >
             {row?.resources?.length > 0 ? row?.resources?.map((id) => {
-              return RESOURCES.find(res => res.id === id)?.icon
+              return <ResourceIcon id={id} key={id} />
             })
               :
-              <X color={Color.DANGER} className='select-none' />
+              <IconX />
             }
           </div>
         </TableCell>
@@ -296,19 +271,52 @@ export default function ProjectDataTable({
         </TableCell>
         */}
         <TableCell align="left">
-          <Badge className='badge-default bdr gap-1 items-center'
-          >
-            <span className='flex gap-1'>
-              <Users size={'14.5px'} className='mt-1' />
-              60/60
-            </span>
-          </Badge>
+          <div className='d-flex gap-8'>
+            <Badge className='badge-default bdr gap-1 items-center'
+              style={{
+                backgroundColor: `${darkenColor(Color.PRIMARY)}`,
+                borderColor: `${lightenColor(Color.PRIMARY)}`,
+                color: 'white',
+              }}
+            >
+              <span className='flex gap-1'>
+                <UserRoundCheck size={'14.5px'} className='mt-1' />
+                60
+              </span>
+            </Badge>
+            <Badge className='badge-default bdr gap-1 items-center'
+              style={{
+                backgroundColor: `${darkenColor(Color.ORANGE)}`,
+                borderColor: `${lightenColor(Color.ORANGE)}`,
+                color: 'white',
+              }}
+            >
+              <span className='flex gap-1'>
+                <UserRoundX size={'14.5px'} className='mt-1' />
+                60
+              </span>
+            </Badge>
+          </div>
         </TableCell>
         <TableCell align="left">
           <div className='d-flex gap-8'>
+            {row?.daily_tasks?.trim() !== '' && row?.daily_tasks_refresh === DailyTaskRefresh.COUNT_DOWN_TIME_IT_UP &&
+              <Badge className='custom-badge bdr select-none'
+                style={{
+                  backgroundColor: `${darkenColor(Color.WARNING)}`,
+                  borderColor: `${lightenColor(Color.WARNING)}`,
+                  color: 'white',
+                }}
+              >
+                <span className='flex gap-1'>
+                  <ClipboardClock size={'14px'} className='mt-1' />
+                  1'
+                </span>
+              </Badge>
+            }
             {row?.daily_tasks?.trim() !== '' &&
               <Badge className='custom-badge bdr select-none pointer'
-                onClick={() => handleClickOpenDailyTask(row)}
+                onClick={() => handleClickOpenTask(row)}
                 style={{
                   backgroundColor: `${darkenColor(getColorDailyTaskRefresh(row?.daily_tasks_refresh))}`,
                   borderColor: `${lightenColor(getColorDailyTaskRefresh(row?.daily_tasks_refresh))}`,
@@ -320,20 +328,6 @@ export default function ProjectDataTable({
                   Todo (0)
                 </span>
               </Badge>
-            }
-            {row?.daily_tasks?.trim() !== '' && row?.daily_tasks_refresh === DailyTaskRefresh.COUNT_DOWN_TIME_IT_UP &&
-              <BadgeWhite className='custom-badge bdr select-none pointer'
-                style={{
-                  backgroundColor: `${darkenColor(Color.WARNING)}`,
-                  borderColor: `${lightenColor(Color.WARNING)}`,
-                  color: 'white',
-                }}
-              >
-                <span className='flex gap-1'>
-                  <ClipboardClock size={'14px'} className='mt-1' />
-                  1'
-                </span>
-              </BadgeWhite>
             }
             {row?.daily_tasks?.trim() !== '' &&
               <Badge className='text-capitalize custom-badge bdr select-none d-flex gap-1'
@@ -469,32 +463,44 @@ export default function ProjectDataTable({
       />
 
       <Modal
-        height={'715px'}
-        width={'1500px'}
-        size='xl'
+        height={'800px'}
+        width={'1600px'}
+        size='xxl'
         isOpen={openProfiles}
         onClose={() => setOpenProfiles(false)}
         title={
           <span>
             {'Profiles'}
-            <span className='text-capitalize'>
-              {` - ${project?.name || ''}`}
+            <span>
+              {' - '}
+              <span className=''>
+                {`${project?.name || ''}`}
+              </span>
             </span>
+            {/* <div */}
+            {/*   className='items-center flex select-none gap-6' */}
+            {/* > */}
+            {/*   {project?.resources?.length > 0 ? project?.resources?.map((id) => { */}
+            {/*     return <ResourceIcon id={id} key={id} /> */}
+            {/*   }) */}
+            {/*     : */}
+            {/*     <IconX /> */}
+            {/*   } */}
+            {/* </div> */}
           </span>
         }
         content={
-          <DailyTaskList
-            projectName={project?.name}
-            projectId={project?.id} />
+          <ProjectProfileList
+            project={project} />
         }
       />
 
       <Modal
-        height={'715px'}
-        width={'1500px'}
-        size='xl'
-        isOpen={openDailyTask}
-        onClose={() => setOpenDailyTask(false)}
+        height={'800px'}
+        width={'1600px'}
+        size='xxl'
+        isOpen={openTask}
+        onClose={() => setOpenTask(false)}
         title={
           <span>
             {DAILY_TASK_TEXT}
@@ -504,9 +510,8 @@ export default function ProjectDataTable({
           </span>
         }
         content={
-          <DailyTaskList
-            projectName={project?.name}
-            projectId={project?.id} />
+          <ProjectTaskList
+            project={project} />
         }
       />
     </>

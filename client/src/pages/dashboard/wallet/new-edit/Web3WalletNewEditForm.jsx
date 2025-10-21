@@ -5,14 +5,15 @@ import * as Yup from 'yup';
 // form
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useForm, Controller, useWatch } from 'react-hook-form';
-import Select from "@/components/Select";
 import { ButtonOutline, ButtonPrimary } from "@/components/Button";
 import { apiPost, apiPut } from "@/utils/axios";
 import useConfirm from "@/hooks/useConfirm";
 import useSpinner from "@/hooks/useSpinner";
 import useMessage from "@/hooks/useMessage";
+import Combobox from "@/components/Combobox";
+import { RESOURCES } from "@/commons/Resources";
 
-export default function WalletNewEditForm({ onCloseModal, isEdit, currentWallet, onUpdateData }) {
+export default function Web3WalletNewEditForm({ onCloseModal, isEdit, currentWallet, onUpdateData }) {
 
   const WalletSchema = Yup.object().shape({
     name: Yup.string()
@@ -24,6 +25,8 @@ export default function WalletNewEditForm({ onCloseModal, isEdit, currentWallet,
   const defaultValues = {
     name: currentWallet?.name || '',
     password: currentWallet?.password || '',
+    url: currentWallet?.url || '',
+    resource_id: currentWallet?.resource_id || '',
   };
 
   const methods = useForm({
@@ -39,9 +42,8 @@ export default function WalletNewEditForm({ onCloseModal, isEdit, currentWallet,
     watch, getValues,
   } = methods;
 
-  const { showConfirm, showSaved } = useConfirm();
-  const { onOpen, onClose } = useSpinner();
   const { onSuccess, onError } = useMessage();
+  const { showConfirm, onCloseLoader } = useConfirm();
 
   const onSubmit = async (data) => {
     if (isEdit) {
@@ -58,37 +60,35 @@ export default function WalletNewEditForm({ onCloseModal, isEdit, currentWallet,
 
   const triggerPost = () => {
     onCloseModal();
-    onClose();
+    onCloseLoader();
     onSuccess("Thêm mới thành công!")
   }
 
   const triggerPut = () => {
     onCloseModal();
-    onClose();
+    onCloseLoader();
     onSuccess("Cập nhật thành công!");
   }
 
   const post = async (body) => {
     try {
-      onOpen();
-      const response = await apiPost("/wallets", body);
+      const response = await apiPost("/web3-wallets", body);
       onUpdateData(triggerPost);
     } catch (error) {
       console.error(error);
       onError(error.message);
-      onClose();
+      onCloseLoader();
     }
   }
 
   const put = async (body) => {
     try {
-      onOpen();
-      const response = await apiPut("/wallets", body);
+      const response = await apiPut("/web3-wallets", body);
       onUpdateData(triggerPut);
     } catch (error) {
       console.error(error);
       onError(error.message);
-      onClose();
+      onCloseLoader();
     }
   }
 
@@ -111,6 +111,36 @@ export default function WalletNewEditForm({ onCloseModal, isEdit, currentWallet,
             name='password'
             placeholder='Nhập mật khẩu ví'
             required
+          />
+        </Col>
+
+        <Col span={24}>
+          <RHFInput
+            label='Link'
+            name='url'
+            placeholder='chrome-extension://aflkmfhebedbjioipglgcbcmnbpgliof/popup.html'
+          />
+        </Col>
+
+        <Col span={24}>
+          <Controller
+            name='resource_id'
+            control={control}
+            render={({ field }) => (
+              <>
+                <label className='d-block font-inter fw-500 fs-14'>
+                  Resource id
+                </label>
+                <Combobox
+                  value={field.value}
+                  items={RESOURCES?.filter(res => res?.type)?.map(item => item?.id)}
+                  placeholder='Chọn resource id'
+                  placeholderSearch="resource id"
+                  onChange={(value) => field.onChange(value)}
+                  capitalize={false}
+                />
+              </>
+            )}
           />
         </Col>
 

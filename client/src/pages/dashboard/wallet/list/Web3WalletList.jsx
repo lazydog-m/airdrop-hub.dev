@@ -1,30 +1,30 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ButtonDanger, ButtonPrimary } from "@/components/Button";
+import React, { useState, useEffect, useCallback } from 'react';
+import { ButtonPrimary } from "@/components/Button";
 import Container from "@/components/Container";
 import { HeaderAction } from "@/components/HeaderSection";
 import Page from "@/components/Page";
-import { CirclePlus, DatabaseZap, Plus, Trash2Icon } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import Modal from '@/components/Modal';
 import { apiGet } from '@/utils/axios';
-import { CURRENT_DATA_TYPE, TRASH_DATA_TYPE, WalletStatus } from '@/enums/enum';
+import { StatusCommon } from '@/enums/enum';
 import useSpinner from '@/hooks/useSpinner';
-import WalletNewEditForm from '../new-edit/WalletNewEditForm';
-import WalletDataTable from './WalletDataTable';
-import WalletFilterSearch from './WalletFilterSearch';
+import Web3WalletNewEditForm from '../new-edit/Web3WalletNewEditForm';
+import Web3WalletDataTable from './Web3WalletDataTable';
+import Web3WalletFilterSearch from './Web3WalletFilterSearch';
 import useMessage from '@/hooks/useMessage';
 import useTable from '@/hooks/useTable';
 import { delayApi } from '@/utils/commonUtil';
 
-const WalletDataTableMemo = React.memo(WalletDataTable);
+const Web3WalletDataTableMemo = React.memo(Web3WalletDataTable);
 
-export default function WalletList() {
+export default function Web3WalletList() {
   const [open, setOpen] = useState(false);
   const [data, setData] = useState([]);
   const [pagination, setPagination] = useState({});
   const { onOpen, onClose } = useSpinner();
   const { onError } = useMessage();
 
-  const [selectedStatusItems, setSelectedStatusItems] = useState([WalletStatus.IN_ACTIVE]);
+  const [selectedStatusItems, setSelectedStatusItems] = useState([StatusCommon.IN_ACTIVE]);
   const [search, setSearch] = useState('');
 
   const {
@@ -44,13 +44,17 @@ export default function WalletList() {
     }
 
     try {
-      onOpen();
-      const response = await apiGet("/wallets", params);
+      if (!dataTrigger) {
+        onOpen();
+      }
+      const response = await apiGet("/web3-wallets", params);
 
       if (dataTrigger) {
-        setData(response.data.data.data || []);
-        setPagination(response.data.data.pagination || {});
-        onTrigger();
+        delayApi(() => {
+          setData(response.data.data.data || []);
+          setPagination(response.data.data.pagination || {});
+          onTrigger();
+        })
       }
       else {
         delayApi(() => {
@@ -58,8 +62,6 @@ export default function WalletList() {
           setPagination(response.data.data.pagination || {});
           onClose();
         })
-        setTimeout(() => {
-        }, 100)
       }
     } catch (error) {
       console.error(error);
@@ -125,7 +127,7 @@ export default function WalletList() {
 
   useEffect(() => {
     fetchApi();
-  }, [selectedStatusItems,/*  dataType, */ search, page])
+  }, [selectedStatusItems, search, page])
 
   return (
     <Page title='Ví Web3'>
@@ -142,17 +144,18 @@ export default function WalletList() {
           }
         />
 
-        <WalletFilterSearch
+        <Web3WalletFilterSearch
           selectedStatusItems={selectedStatusItems}
           onChangeSelectedStatusItems={handleChangeSelectedStatusItems}
           onClearSelectedStatusItems={() => setSelectedStatusItems([])}
+
           onClearAllSelectedItems={handleClearAllSelectedItems}
+
           onChangeSearch={handleChangeSearch}
           search={search}
         />
 
-        <WalletDataTableMemo
-          // dataType={dataType}
+        <Web3WalletDataTableMemo
           pagination={pagination}
           onChangePage={handleChangePage}
 
@@ -166,12 +169,13 @@ export default function WalletList() {
         />
 
         <Modal
-          size='sm'
+          width={800}
+          size='md'
           isOpen={open}
           onClose={handleClose}
           title={"Thêm mới ví Web3"}
           content={
-            <WalletNewEditForm
+            <Web3WalletNewEditForm
               onCloseModal={handleClose}
               onUpdateData={handleUpdateData}
             />

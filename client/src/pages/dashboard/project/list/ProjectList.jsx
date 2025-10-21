@@ -54,14 +54,19 @@ export default function ProjectList() {
     }
 
     try {
-      onOpen();
+      if (!dataTrigger) {
+        onOpen();
+      }
+
       const response = await apiGet("/projects", params);
       console.log(response.data.data)
 
       if (dataTrigger) {
-        setData(response.data.data.data || []);
-        setPagination(response.data.data.pagination || {});
-        onTrigger();
+        delayApi(() => {
+          setData(response.data.data.data || []);
+          setPagination(response.data.data.pagination || {});
+          onTrigger();
+        })
       }
       else {
         delayApi(() => {

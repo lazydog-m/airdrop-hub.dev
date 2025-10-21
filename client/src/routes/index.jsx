@@ -31,8 +31,6 @@ export default function Router() {
           path: 'project',
           children: [
             { path: 'list', element: <ProjectList /> },
-            // { path: 'create', element: <ProjectList /> },
-            // { path: ':id/edit', element: <ProjectList /> },
           ],
         },
 
@@ -40,27 +38,31 @@ export default function Router() {
           path: 'profile',
           children: [
             { path: 'list', element: <ProfileList /> },
-            // { path: 'create', element: <ProfileList /> },
-            // { path: ':id/edit', element: <ProfileList /> },
           ],
         },
 
         {
-          path: 'wallet',
+          path: 'web3-wallet',
           children: [
-            { path: 'list', element: <WalletList /> },
-            // { path: 'create', element: <WalletList /> },
-            // { path: ':id/edit', element: <WalletList /> },
+            { path: 'list', element: <Web3WalletList /> },
           ],
         },
+
         {
-          path: 'task',
+          path: 'extension',
           children: [
-            { path: 'list', element: <TaskList /> },
-            { path: 'create', element: <TaskNewEdit /> },
-            { path: ':id/edit', element: <TaskNewEdit /> },
+            { path: 'list', element: <ExtensionList /> },
           ],
         },
+
+        // {
+        //   path: 'task',
+        //   children: [
+        //     { path: 'list', element: <TaskList /> },
+        //     { path: 'create', element: <TaskNewEdit /> },
+        //     { path: ':id/edit', element: <TaskNewEdit /> },
+        //   ],
+        // },
         {
           path: 'script',
           children: [
@@ -80,9 +82,10 @@ export default function Router() {
 
 const ProjectList = Loadable(lazy(() => import('../pages/dashboard/project/list/ProjectList')));
 const ProfileList = Loadable(lazy(() => import('../pages/dashboard/profile/list/ProfileList')));
-const WalletList = Loadable(lazy(() => import('../pages/dashboard/wallet/list/WalletList')));
-const TaskList = Loadable(lazy(() => import('../pages/dashboard/task/list/TaskList')));
+const Web3WalletList = Loadable(lazy(() => import('../pages/dashboard/wallet/list/Web3WalletList')));
+const ExtensionList = Loadable(lazy(() => import('../pages/dashboard/extension/list/ExtensionList')));
+// const TaskList = Loadable(lazy(() => import('../pages/dashboard/task/list/TaskList')));
+// const TaskNewEdit = Loadable(lazy(() => import('../pages/dashboard/task/new-edit/TaskNewEdit')));
 const ScriptList = Loadable(lazy(() => import('../pages/dashboard/script/list/ScriptList')));
 const ScriptNewEdit = Loadable(lazy(() => import('../pages/dashboard/script/new-edit/ScriptNewEdit')));
-const TaskNewEdit = Loadable(lazy(() => import('../pages/dashboard/task/new-edit/TaskNewEdit')));
 const GeneralApp = Loadable(lazy(() => import('../pages/dashboard/statistics/GeneralApp')));

@@ -1,16 +1,42 @@
 import { Color } from '@/enums/enum';
+import { delayApi } from '@/utils/commonUtil';
+import { useEffect, useRef, useState } from 'react';
 import Swal from 'sweetalert2'
 
 const useConfirm = () => {
 
-  document.addEventListener('keydown', (event) => {
-    if (Swal.isVisible && event.key === 'Enter') {
-      event.preventDefault();
-    }
-  });
+  const [isOpen, setIsOpen] = useState(false);
 
-  const showConfirm = (title = '', api, text = '', onCancel) => {
-    // document.body.style.overflowY = 'hidden';
+  const handleOpen = () => {
+    setIsOpen(true);
+  }
+
+  const handleClose = () => {
+    setIsOpen(false);
+  }
+
+  const resolverRef = useRef(null);
+
+  useEffect(() => {
+    if (!isOpen && resolverRef.current) {
+      resolverRef.current();
+      resolverRef.current = null;
+    }
+  }, [isOpen]);
+
+  // ✅ Fix loader khi navigate
+  // useEffect(() => {
+  //   return () => {
+  //     if (Swal.isVisible()) Swal.close();
+  //     if (resolverRef.current) {
+  //       resolverRef.current();
+  //       resolverRef.current = null;
+  //     }
+  //   };
+  // }, []);
+
+  const showConfirm = (title = '', api, text = '', onOk) => {
+
     Swal.fire({
       title: title || "Confirm?",
       text,
@@ -27,15 +53,47 @@ const useConfirm = () => {
       customClass: {
         container: 'my-swal',
       },
+      showLoaderOnConfirm: true,
+      allowOutsideClick: () => !Swal.isLoading(),
+      allowEscapeKey: () => !Swal.isLoading(),   // Prevent dismissing by pressing Escape
+      preConfirm: () => {
+        handleOpen(); // chỉ để cho useEffect update isOpen
+        api?.();
+        return new Promise((resolve) => {
+          resolverRef.current = resolve;
+        });
+      },
     }).then((result) => {
       if (result.isConfirmed) {
-        api();
+
+        if (onOk) {
+          setTimeout(() => {
+            onOk?.();
+          }, 150)
+        }
       } else {
-        onCancel?.();
+        // onCancel?.();
       }
-      // document.body.style.overflowY = '';
     });
   };
+
+  const showLoading = () => {
+    Swal.fire({
+      customClass: {
+        container: 'my-swal',
+      },
+      title: 'Đang xử lý...',
+      allowOutsideClick: false, // Prevent dismissing by clicking outside
+      allowEscapeKey: false,   // Prevent dismissing by pressing Escape
+      didOpen: () => {
+        Swal.showLoading()
+      },
+    });
+  }
+
+  const swalClose = () => {
+    Swal.close();
+  }
 
   const showSaved = (title = 'Đã lưu!') => {
     Swal.fire({
@@ -77,6 +135,15 @@ const useConfirm = () => {
     });
   };
 
-  return { showConfirm, showConfirmCancel, showSaved };
+  return {
+    showConfirm,
+    isLoader: isOpen,
+    onOpenLoader: handleOpen,
+    onCloseLoader: handleClose,
+    showConfirmCancel,
+    showSaved,
+    showLoading,
+    swalClose,
+  };
 }
 export default useConfirm;

@@ -6,7 +6,7 @@ const useCopy = () => {
     id: null, type: null,
   });
 
-  const handleCopy = (id, type, text) => {
+  const handleCopy = (id, text, type) => {
     navigator.clipboard.writeText(text).then(() => {
       setCopied({
         id, type,

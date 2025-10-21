@@ -8,12 +8,9 @@ export const BadgePrimaryOutline = ({ children, ...other }) => {
             via-[#C36648]
             to-[#2EAD33]
               p-1
-              flex items-center justify-center"
+              inline-flex items-center justify-center"
     >
-      <Badge className="badge text-capitalize bg-color gap-1 items-center" {...other}
-        style={{
-          color: 'white',
-        }}
+      <Badge className="badge text-capitalize bg-color gap-1 items-center color-white" {...other}
       >
         {children}
       </Badge>

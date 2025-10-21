@@ -18,7 +18,13 @@ MessageProvider.propTypes = {
 function MessageProvider({ children }) {
 
   // const [messageApi, contextHolder] = message.useMessage();
-  const [messageApi, contextHolder] = notification.useNotification();
+  const [messageApi, contextHolder] = notification.useNotification(
+    {
+      stack: {
+        threshold: 1
+      }
+    }
+  );
 
   const success = (message = '', desc = null) => {
     messageApi.open({
@@ -27,10 +33,11 @@ function MessageProvider({ children }) {
       description: desc,
       showProgress: true,
       pauseOnHover: false,
-      style: {
-        height: !desc ? '65px' : '',
-        zIndex: 10000,
-      },
+      placement: 'bottomRight',
+      // style: {
+      // height: !desc ? '65px' : 'auto',
+      //   zIndex: 10000,
+      // },
     });
   };
 
@@ -64,9 +71,10 @@ function MessageProvider({ children }) {
       message,
       description: desc,
       showProgress: true,
-      pauseOnHover: false,
+      placement: 'bottomRight',
+      pauseOnHover: true,
       style: {
-        height: !desc ? '65px' : '',
+        // height: 'auto',
         zIndex: 10000,
       },
     });

@@ -89,7 +89,7 @@ export default function Combobox({
           type='button'
           title={
             <>
-              {value ? items?.find((item) => item === value) : placeholder}
+              {value ? value : placeholder}
               <ChevronsUpDownIcon color="#999998" />
             </>
           }

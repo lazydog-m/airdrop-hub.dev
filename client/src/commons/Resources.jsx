@@ -1,19 +1,69 @@
 import { DiscordBadge, MetaMaskBadge } from "cryptocons";
 import { NetworkSui, WalletBackpack } from "@web3icons/react";
+import { Check, CheckCheck, X } from "lucide-react";
+import { Color } from "@/enums/enum";
 
 export const RESOURCES = [
   {
     id: 'metamask',
     title: 'MetaMask',
+    type: 'web3-wallet',
+    checkIcon: (
+      <div className="relative flex items-center justify-center">
+        <MetaMaskBadge />
+
+        <div className="absolute top-0 right-0 translate-x-1.5 -translate-y-1 bg-green-500 text-white rounded-full p-[2px] shadow-md">
+          <Check size={10} strokeWidth={4} />
+        </div>
+      </div>
+    ),
+    xIcon: (
+      <div className="relative flex items-center justify-center">
+        <MetaMaskBadge />
+
+        <div
+          className="absolute top-0 right-0 translate-x-1.5 -translate-y-1 text-white rounded-full p-[2px] shadow-md"
+          style={{ backgroundColor: Color.DANGER }}
+        >
+          <X size={10} strokeWidth={4} />
+        </div>
+      </div>
+    ),
     icon: <MetaMaskBadge />,
   },
   {
-    id: 'gmail',
-    title: 'Gmail',
-    icon: <svg width="24px" height="24px" viewBox="0 0 32 32" data-name="Layer 1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" style={{ backgroundColor: '#f1f1f1', borderRadius: '8px', padding: '2px' }}>
-      <path d="M16.58,19.1068l-12.69-8.0757A3,3,0,0,1,7.1109,5.97l9.31,5.9243L24.78,6.0428A3,3,0,0,1,28.22,10.9579Z" fill="#ea4435" />
-      <path d="M25.5,5.5h4a0,0,0,0,1,0,0v18a3,3,0,0,1-3,3h0a3,3,0,0,1-3-3V7.5a2,2,0,0,1,2-2Z" fill="#00ac47" transform="translate(53.0001 32.0007) rotate(180)" /><path d="M29.4562,8.0656c-.0088-.06-.0081-.1213-.0206-.1812-.0192-.0918-.0549-.1766-.0823-.2652a2.9312,2.9312,0,0,0-.0958-.2993c-.02-.0475-.0508-.0892-.0735-.1354A2.9838,2.9838,0,0,0,28.9686,6.8c-.04-.0581-.09-.1076-.1342-.1626a3.0282,3.0282,0,0,0-.2455-.2849c-.0665-.0647-.1423-.1188-.2146-.1771a3.02,3.02,0,0,0-.24-.1857c-.0793-.0518-.1661-.0917-.25-.1359-.0884-.0461-.175-.0963-.267-.1331-.0889-.0358-.1837-.0586-.2766-.0859s-.1853-.06-.2807-.0777a3.0543,3.0543,0,0,0-.357-.036c-.0759-.0053-.1511-.0186-.2273-.018a2.9778,2.9778,0,0,0-.4219.0425c-.0563.0084-.113.0077-.1689.0193a33.211,33.211,0,0,0-.5645.178c-.0515.022-.0966.0547-.1465.0795A2.901,2.901,0,0,0,23.5,8.5v5.762l4.72-3.3043a2.8878,2.8878,0,0,0,1.2359-2.8923Z" fill="#ffba00" /><path d="M5.5,5.5h0a3,3,0,0,1,3,3v18a0,0,0,0,1,0,0h-4a2,2,0,0,1-2-2V8.5a3,3,0,0,1,3-3Z" fill="#4285f4" /><path d="M2.5439,8.0656c.0088-.06.0081-.1213.0206-.1812.0192-.0918.0549-.1766.0823-.2652A2.9312,2.9312,0,0,1,2.7426,7.32c.02-.0475.0508-.0892.0736-.1354A2.9719,2.9719,0,0,1,3.0316,6.8c.04-.0581.09-.1076.1342-.1626a3.0272,3.0272,0,0,1,.2454-.2849c.0665-.0647.1423-.1188.2147-.1771a3.0005,3.0005,0,0,1,.24-.1857c.0793-.0518.1661-.0917.25-.1359A2.9747,2.9747,0,0,1,4.3829,5.72c.089-.0358.1838-.0586.2766-.0859s.1853-.06.2807-.0777a3.0565,3.0565,0,0,1,.357-.036c.076-.0053.1511-.0186.2273-.018a2.9763,2.9763,0,0,1,.4219.0425c.0563.0084.113.0077.169.0193a2.9056,2.9056,0,0,1,.286.0888,2.9157,2.9157,0,0,1,.2785.0892c.0514.022.0965.0547.1465.0795a2.9745,2.9745,0,0,1,.3742.21A2.9943,2.9943,0,0,1,8.5,8.5v5.762L3.78,10.9579A2.8891,2.8891,0,0,1,2.5439,8.0656Z" fill="#c52528" /></svg>,
+    id: 'google',
+    title: 'Google',
+    icon: <svg width="24px" height="24px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" style={{ backgroundColor: '#f1f1f1', borderRadius: '8px', padding: '3px' }} fill="none"><path fill="#4285F4" d="M14.9 8.161c0-.476-.039-.954-.121-1.422h-6.64v2.695h3.802a3.24 3.24 0 01-1.407 2.127v1.75h2.269c1.332-1.22 2.097-3.02 2.097-5.15z" /><path fill="#34A853" d="M8.14 15c1.898 0 3.499-.62 4.665-1.69l-2.268-1.749c-.631.427-1.446.669-2.395.669-1.836 0-3.393-1.232-3.952-2.888H1.85v1.803A7.044 7.044 0 008.14 15z" /><path fill="#FBBC04" d="M4.187 9.342a4.17 4.17 0 010-2.68V4.859H1.849a6.97 6.97 0 000 6.286l2.338-1.803z" /><path fill="#EA4335" d="M8.14 3.77a3.837 3.837 0 012.7 1.05l2.01-1.999a6.786 6.786 0 00-4.71-1.82 7.042 7.042 0 00-6.29 3.858L4.186 6.66c.556-1.658 2.116-2.89 3.952-2.89z" /></svg>,
+    checkIcon: (
+      <div className="relative flex items-center justify-center">
+        <svg width="24px" height="24px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" style={{ backgroundColor: '#f1f1f1', borderRadius: '8px', padding: '3px' }} fill="none"><path fill="#4285F4" d="M14.9 8.161c0-.476-.039-.954-.121-1.422h-6.64v2.695h3.802a3.24 3.24 0 01-1.407 2.127v1.75h2.269c1.332-1.22 2.097-3.02 2.097-5.15z" /><path fill="#34A853" d="M8.14 15c1.898 0 3.499-.62 4.665-1.69l-2.268-1.749c-.631.427-1.446.669-2.395.669-1.836 0-3.393-1.232-3.952-2.888H1.85v1.803A7.044 7.044 0 008.14 15z" /><path fill="#FBBC04" d="M4.187 9.342a4.17 4.17 0 010-2.68V4.859H1.849a6.97 6.97 0 000 6.286l2.338-1.803z" /><path fill="#EA4335" d="M8.14 3.77a3.837 3.837 0 012.7 1.05l2.01-1.999a6.786 6.786 0 00-4.71-1.82 7.042 7.042 0 00-6.29 3.858L4.186 6.66c.556-1.658 2.116-2.89 3.952-2.89z" /></svg>
+
+        <div className="absolute top-0 right-0 translate-x-1.5 -translate-y-1 bg-green-500 text-white rounded-full p-[2px] shadow-md">
+          <Check size={10} strokeWidth={4} />
+        </div>
+      </div>
+    ),
+    xIcon: (
+      <div className="relative flex items-center justify-center">
+        <svg width="24px" height="24px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" style={{ backgroundColor: '#f1f1f1', borderRadius: '8px', padding: '3px' }} fill="none"><path fill="#4285F4" d="M14.9 8.161c0-.476-.039-.954-.121-1.422h-6.64v2.695h3.802a3.24 3.24 0 01-1.407 2.127v1.75h2.269c1.332-1.22 2.097-3.02 2.097-5.15z" /><path fill="#34A853" d="M8.14 15c1.898 0 3.499-.62 4.665-1.69l-2.268-1.749c-.631.427-1.446.669-2.395.669-1.836 0-3.393-1.232-3.952-2.888H1.85v1.803A7.044 7.044 0 008.14 15z" /><path fill="#FBBC04" d="M4.187 9.342a4.17 4.17 0 010-2.68V4.859H1.849a6.97 6.97 0 000 6.286l2.338-1.803z" /><path fill="#EA4335" d="M8.14 3.77a3.837 3.837 0 012.7 1.05l2.01-1.999a6.786 6.786 0 00-4.71-1.82 7.042 7.042 0 00-6.29 3.858L4.186 6.66c.556-1.658 2.116-2.89 3.952-2.89z" /></svg>
+
+        <div
+          className="absolute top-0 right-0 translate-x-1.5 -translate-y-1 text-white rounded-full p-[2px] shadow-md"
+          style={{ backgroundColor: Color.DANGER }}
+        >
+          <X size={10} strokeWidth={4} />
+        </div>
+      </div>
+    ),
   },
+  // {
+  //   id: 'gmail',
+  //   title: 'Gmail',
+  //   icon: <svg width="24px" height="24px" viewBox="0 0 32 32" data-name="Layer 1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" style={{ backgroundColor: '#f1f1f1', borderRadius: '8px', padding: '2px' }}>
+  //     <path d="M16.58,19.1068l-12.69-8.0757A3,3,0,0,1,7.1109,5.97l9.31,5.9243L24.78,6.0428A3,3,0,0,1,28.22,10.9579Z" fill="#ea4435" />
+  //     <path d="M25.5,5.5h4a0,0,0,0,1,0,0v18a3,3,0,0,1-3,3h0a3,3,0,0,1-3-3V7.5a2,2,0,0,1,2-2Z" fill="#00ac47" transform="translate(53.0001 32.0007) rotate(180)" /><path d="M29.4562,8.0656c-.0088-.06-.0081-.1213-.0206-.1812-.0192-.0918-.0549-.1766-.0823-.2652a2.9312,2.9312,0,0,0-.0958-.2993c-.02-.0475-.0508-.0892-.0735-.1354A2.9838,2.9838,0,0,0,28.9686,6.8c-.04-.0581-.09-.1076-.1342-.1626a3.0282,3.0282,0,0,0-.2455-.2849c-.0665-.0647-.1423-.1188-.2146-.1771a3.02,3.02,0,0,0-.24-.1857c-.0793-.0518-.1661-.0917-.25-.1359-.0884-.0461-.175-.0963-.267-.1331-.0889-.0358-.1837-.0586-.2766-.0859s-.1853-.06-.2807-.0777a3.0543,3.0543,0,0,0-.357-.036c-.0759-.0053-.1511-.0186-.2273-.018a2.9778,2.9778,0,0,0-.4219.0425c-.0563.0084-.113.0077-.1689.0193a33.211,33.211,0,0,0-.5645.178c-.0515.022-.0966.0547-.1465.0795A2.901,2.901,0,0,0,23.5,8.5v5.762l4.72-3.3043a2.8878,2.8878,0,0,0,1.2359-2.8923Z" fill="#ffba00" /><path d="M5.5,5.5h0a3,3,0,0,1,3,3v18a0,0,0,0,1,0,0h-4a2,2,0,0,1-2-2V8.5a3,3,0,0,1,3-3Z" fill="#4285f4" /><path d="M2.5439,8.0656c.0088-.06.0081-.1213.0206-.1812.0192-.0918.0549-.1766.0823-.2652A2.9312,2.9312,0,0,1,2.7426,7.32c.02-.0475.0508-.0892.0736-.1354A2.9719,2.9719,0,0,1,3.0316,6.8c.04-.0581.09-.1076.1342-.1626a3.0272,3.0272,0,0,1,.2454-.2849c.0665-.0647.1423-.1188.2147-.1771a3.0005,3.0005,0,0,1,.24-.1857c.0793-.0518.1661-.0917.25-.1359A2.9747,2.9747,0,0,1,4.3829,5.72c.089-.0358.1838-.0586.2766-.0859s.1853-.06.2807-.0777a3.0565,3.0565,0,0,1,.357-.036c.076-.0053.1511-.0186.2273-.018a2.9763,2.9763,0,0,1,.4219.0425c.0563.0084.113.0077.169.0193a2.9056,2.9056,0,0,1,.286.0888,2.9157,2.9157,0,0,1,.2785.0892c.0514.022.0965.0547.1465.0795a2.9745,2.9745,0,0,1,.3742.21A2.9943,2.9943,0,0,1,8.5,8.5v5.762L3.78,10.9579A2.8891,2.8891,0,0,1,2.5439,8.0656Z" fill="#c52528" /></svg>,
+  // },
   {
     id: 'x',
     title: 'X',
@@ -21,11 +71,59 @@ export const RESOURCES = [
       fill={"currentColor"} viewBox="0 0 24 24">
       <path d="M13.68 10.62 20.24 3h-1.55L13 9.62 8.45 3H3.19l6.88 10.01L3.19 21h1.55l6.01-6.99 4.8 6.99h5.24l-7.13-10.38Zm-2.13 2.47-.7-1-5.54-7.93H7.7l4.47 6.4.7 1 5.82 8.32H16.3z"></path>
     </svg>,
+    checkIcon: (
+      <div className="relative flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} style={{ backgroundColor: '#00040F', borderRadius: '8px', padding: '1px' }}
+          fill={"currentColor"} viewBox="0 0 24 24">
+          <path d="M13.68 10.62 20.24 3h-1.55L13 9.62 8.45 3H3.19l6.88 10.01L3.19 21h1.55l6.01-6.99 4.8 6.99h5.24l-7.13-10.38Zm-2.13 2.47-.7-1-5.54-7.93H7.7l4.47 6.4.7 1 5.82 8.32H16.3z"></path>
+        </svg>
+
+        <div className="absolute top-0 right-0 translate-x-1.5 -translate-y-1 bg-green-500 text-white rounded-full p-[2px] shadow-md">
+          <Check size={10} strokeWidth={4} />
+        </div>
+      </div>
+    ),
+    xIcon: (
+      <div className="relative flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} style={{ backgroundColor: '#00040F', borderRadius: '8px', padding: '1px' }}
+          fill={"currentColor"} viewBox="0 0 24 24">
+          <path d="M13.68 10.62 20.24 3h-1.55L13 9.62 8.45 3H3.19l6.88 10.01L3.19 21h1.55l6.01-6.99 4.8 6.99h5.24l-7.13-10.38Zm-2.13 2.47-.7-1-5.54-7.93H7.7l4.47 6.4.7 1 5.82 8.32H16.3z"></path>
+        </svg>
+
+        <div
+          className="absolute top-0 right-0 translate-x-1.5 -translate-y-1 text-white rounded-full p-[2px] shadow-md"
+          style={{ backgroundColor: Color.DANGER }}
+        >
+          <X size={10} strokeWidth={4} />
+        </div>
+      </div>
+    ),
   },
   {
     id: 'discord',
     title: 'Discord',
     icon: <DiscordBadge />,
+    checkIcon: (
+      <div className="relative flex items-center justify-center">
+        <DiscordBadge />
+
+        <div className="absolute top-0 right-0 translate-x-1.5 -translate-y-1 bg-green-500 text-white rounded-full p-[2px] shadow-md">
+          <Check size={10} strokeWidth={4} />
+        </div>
+      </div>
+    ),
+    xIcon: (
+      <div className="relative flex items-center justify-center">
+        <DiscordBadge />
+
+        <div
+          className="absolute top-0 right-0 translate-x-1.5 -translate-y-1 text-white rounded-full p-[2px] shadow-md"
+          style={{ backgroundColor: Color.DANGER }}
+        >
+          <X size={10} strokeWidth={4} />
+        </div>
+      </div>
+    ),
   },
   {
     id: 'telegram',
@@ -34,15 +132,109 @@ export const RESOURCES = [
       fill="#FFFFFF" viewBox="0 0 24 24" >
       <path d="m20.665 3.717-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.579.192l-8.533 7.701h-.002l.002.001-.314 4.692c.46 0 .663-.211.921-.46l2.211-2.15 4.599 3.397c.848.467 1.457.227 1.668-.785l3.019-14.228c.309-1.239-.473-1.8-1.282-1.434"></path>
     </svg>,
+    checkIcon: (
+      <div className="relative flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" style={{ backgroundColor: '#1D9EDF', borderRadius: '8px', padding: '3px' }}
+          fill="#FFFFFF" viewBox="0 0 24 24" >
+          <path d="m20.665 3.717-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.579.192l-8.533 7.701h-.002l.002.001-.314 4.692c.46 0 .663-.211.921-.46l2.211-2.15 4.599 3.397c.848.467 1.457.227 1.668-.785l3.019-14.228c.309-1.239-.473-1.8-1.282-1.434"></path>
+        </svg>
+
+        <div className="absolute top-0 right-0 translate-x-1.5 -translate-y-1 bg-green-500 text-white rounded-full p-[2px] shadow-md">
+          <Check size={10} strokeWidth={4} />
+        </div>
+      </div>
+    ),
+    xIcon: (
+      <div className="relative flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" style={{ backgroundColor: '#1D9EDF', borderRadius: '8px', padding: '3px' }}
+          fill="#FFFFFF" viewBox="0 0 24 24" >
+          <path d="m20.665 3.717-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.579.192l-8.533 7.701h-.002l.002.001-.314 4.692c.46 0 .663-.211.921-.46l2.211-2.15 4.599 3.397c.848.467 1.457.227 1.668-.785l3.019-14.228c.309-1.239-.473-1.8-1.282-1.434"></path>
+        </svg>
+
+        <div
+          className="absolute top-0 right-0 translate-x-1.5 -translate-y-1 text-white rounded-full p-[2px] shadow-md"
+          style={{ backgroundColor: Color.DANGER }}
+        >
+          <X size={10} strokeWidth={4} />
+        </div>
+      </div>
+    ),
   },
   {
     id: 'backpack',
     title: 'Backpack',
+    type: 'web3-wallet',
     icon: <WalletBackpack variant="background" style={{ borderRadius: '8px' }} size="24" />,
+    checkIcon: (
+      <div className="relative flex items-center justify-center">
+        <WalletBackpack variant="background" style={{ borderRadius: '8px' }} size="24" />
+
+        <div className="absolute top-0 right-0 translate-x-1.5 -translate-y-1 bg-green-500 text-white rounded-full p-[2px] shadow-md">
+          <Check size={10} strokeWidth={4} />
+        </div>
+      </div>
+    ),
+    xIcon: (
+      <div className="relative flex items-center justify-center">
+        <WalletBackpack variant="background" style={{ borderRadius: '8px' }} size="24" />
+
+        <div
+          className="absolute top-0 right-0 translate-x-1.5 -translate-y-1 text-white rounded-full p-[2px] shadow-md"
+          style={{ backgroundColor: Color.DANGER }}
+        >
+          <X size={10} strokeWidth={4} />
+        </div>
+      </div>
+    ),
   },
   {
-    id: 'sui',
+    id: 'suiwallet',
     title: 'Sui Wallet',
+    type: 'web3-wallet',
     icon: <NetworkSui variant="background" style={{ borderRadius: '8px' }} size="24" />,
+    checkIcon: (
+      <div className="relative flex items-center justify-center">
+        <NetworkSui variant="background" style={{ borderRadius: '8px' }} size="24" />
+
+        <div className="absolute top-0 right-0 translate-x-1.5 -translate-y-1 bg-green-500 text-white rounded-full p-[2px] shadow-md">
+          <Check size={10} strokeWidth={4} />
+        </div>
+      </div>
+    ),
+    xIcon: (
+      <div className="relative flex items-center justify-center">
+        <NetworkSui variant="background" style={{ borderRadius: '8px' }} size="24" />
+
+        <div
+          className="absolute top-0 right-0 translate-x-1.5 -translate-y-1 text-white rounded-full p-[2px] shadow-md"
+          style={{ backgroundColor: Color.DANGER }}
+        >
+          <X size={10} strokeWidth={4} />
+        </div>
+      </div>
+    ),
   },
 ]
+
+export const ResourceIcon = ({
+  id = '',
+  ...other
+}) => {
+  return (
+    <div {...other}>
+      {RESOURCES.find(res => res.id === id)?.icon}
+    </div>
+  )
+}
+
+export const ResourceIconCheck = ({
+  id = '',
+  check = false,
+  ...other
+}) => {
+  return (
+    <div {...other}>
+      {check && RESOURCES.find(res => res.id === id)?.checkIcon || RESOURCES.find(res => res.id === id)?.xIcon}
+    </div>
+  )
+}

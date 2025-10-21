@@ -18,26 +18,33 @@ import Combobox from "@/components/Combobox";
 import Autocomplete from "@/components/Autocomplete";
 import { parseNumber } from "@/utils/convertUtil";
 
-export default function DailyTaskNewEditForm({ onCloseModal, isEdit, currentDailyTask, onUpdateData, projectName, projectId }) {
+export default function ProjectTaskNewEditForm({
+  onCloseModal,
+  isEdit,
+  currentTask,
+  onUpdateData,
+  projectName,
+  projectId
+}) {
 
-  const DailyTaskSchema = Yup.object().shape({
+  const TaskSchema = Yup.object().shape({
     name: Yup.string()
       .trim().required('Tên task không được để trống!'),
   });
 
   const defaultValues = {
-    name: currentDailyTask?.name || '',
-    points: currentDailyTask?.points || '', // null
-    url: currentDailyTask?.url || '',
-    script_name: currentDailyTask?.script_name || '',
+    name: currentTask?.name || '',
+    points: currentTask?.points || '', // null
+    url: currentTask?.url || '',
+    script_name: currentTask?.script_name || '',
     // status: currentDailyTask?.status || ProjectStatus.DOING,
     // daily_tasks_refresh: currentDailyTask?.daily_tasks_refresh || DailyTaskRefresh.UNKNOWN,
-    description: currentDailyTask?.description || '',
-    has_manual: isEdit ? currentDailyTask.has_manual : false,
+    description: currentTask?.description || '',
+    has_manual: isEdit ? currentTask.has_manual : false,
   };
 
   const methods = useForm({
-    resolver: yupResolver(DailyTaskSchema),
+    resolver: yupResolver(TaskSchema),
     defaultValues,
   });
 
@@ -51,7 +58,7 @@ export default function DailyTaskNewEditForm({ onCloseModal, isEdit, currentDail
     formState: { isValid }
   } = methods;
 
-  const { showConfirm, showSaved } = useConfirm();
+  const { showConfirm, onCloseLoader } = useConfirm();
   const { onOpen, onClose } = useSpinner();
   const { onSuccess, onError } = useMessage();
 
@@ -61,12 +68,12 @@ export default function DailyTaskNewEditForm({ onCloseModal, isEdit, currentDail
     if (isEdit) {
       const body = {
         ...data,
-        id: currentDailyTask.id,
+        id: currentTask.id,
         project_id: projectId,
         points,
       }
       console.log(body)
-      showConfirm("Xác nhận cập nhật task hằng ngày?", () => put(body));
+      showConfirm("Xác nhận cập nhật task?", () => put(body));
     }
     else {
       const body = {
@@ -75,43 +82,41 @@ export default function DailyTaskNewEditForm({ onCloseModal, isEdit, currentDail
         points,
       }
       console.log(body)
-      showConfirm("Xác nhận thêm mới task hằng ngày?", () => post(body));
+      showConfirm("Xác nhận thêm mới task?", () => post(body));
     }
   }
 
   const triggerPost = () => {
     onCloseModal();
-    onClose();
+    onCloseLoader();
     onSuccess("Thêm mới thành công!")
   }
 
   const triggerPut = () => {
     onCloseModal();
-    onClose();
+    onCloseLoader();
     onSuccess("Cập nhật thành công!");
   }
 
   const post = async (body) => {
     try {
-      onOpen();
       const response = await apiPost("/tasks", body);
       onUpdateData(triggerPost);
     } catch (error) {
       console.error(error);
       onError(error.message);
-      onClose();
+      onCloseLoader();
     }
   }
 
   const put = async (body) => {
     try {
-      onOpen();
       const response = await apiPut("/tasks", body);
       onUpdateData(triggerPut);
     } catch (error) {
       console.error(error);
       onError(error.message);
-      onClose();
+      onCloseLoader();
     }
   }
 
@@ -189,7 +194,7 @@ export default function DailyTaskNewEditForm({ onCloseModal, isEdit, currentDail
                 </label>
                 <Combobox
                   value={field.value}
-                  items={scripts?.map(item => item.fileName) || []}
+                  items={scripts?.map(item => item?.fileName) || []}
                   placeholder='Chọn script'
                   placeholderSearch="script"
                   onChange={(value) => field.onChange(value)}
@@ -271,7 +276,6 @@ export default function DailyTaskNewEditForm({ onCloseModal, isEdit, currentDail
 
 const DAILY_TASK_ARR = [
   'Check-In',
-  'Check Login',
   'Faucet',
   'Bridge',
   'Swap',

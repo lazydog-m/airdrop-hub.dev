@@ -183,6 +183,10 @@ body {
   color: var(--text-gray);
 }
 
+.bg-gray {
+  background: var(--text-gray);
+}
+
 .d-flex {
   display: flex;
 }
@@ -1064,6 +1068,26 @@ body {
   height: 35px;
 }
 
+.h-34 {
+  height: 34px;
+}
+
+.h-33 {
+  height: 33px;
+}
+
+.h-32 {
+  height: 32px;
+}
+
+.h-31 {
+  height: 31px;
+}
+
+.h-30 {
+  height: 30px;
+}
+
 .button-primary {
   background: var(--color);
   border-radius: 0px !important;
@@ -1072,6 +1096,16 @@ body {
 
 .button-primary:hover {
   background: var(--color-hover);
+}
+
+.button-orange {
+  color: white;
+  background-color: #D45D55;
+  border-radius: 0px !important;
+}
+
+.button-orange:hover {
+  background-color: #BF544D;
 }
 
 .button-info {
@@ -1101,6 +1135,12 @@ body {
   border-image: linear-gradient(to right, var(--red), var(--green)) 1;
   background-color: var(--bg-light);
   color: white;
+}
+
+.border-primary {
+  border-width: 1px;
+  border-style: solid;
+  border-image: linear-gradient(to right, var(--red), var(--green)) 1;
 }
 
 .button-outline-primary:hover {
@@ -1315,8 +1355,32 @@ body {
   /* Internet Explorer/Edge */
 }
 
+.pdi-15 {
+  padding-inline: 15px;
+}
+
 .pdi-10 {
   padding-inline: 10px;
+}
+
+.pdi-11 {
+  padding-inline: 11px;
+}
+
+.pdi-12 {
+  padding-inline: 12px;
+}
+
+.pdi-13 {
+  padding-inline: 13px;
+}
+
+.pdi-14 {
+  padding-inline: 14px;
+}
+
+.pdi-20 {
+  padding-inline: 20px;
 }
 
 .pdi-9 {
@@ -1510,8 +1574,32 @@ body {
   padding-block: 5px;
 }
 
+.pdb-6 {
+  padding-block: 6px;
+}
+
+.pdb-7 {
+  padding-block: 7px;
+}
+
+.pdb-8 {
+  padding-block: 8px;
+}
+
+.pdb-9 {
+  padding-block: 9px;
+}
+
 .pdb-10 {
   padding-block: 10px;
+}
+
+.pdb-15 {
+  padding-block: 15px;
+}
+
+.pdb-20 {
+  padding-block: 20px;
 }
 
 .badge-default {
@@ -1731,7 +1819,8 @@ body {
 
 .ant-notification-notice-message {
   color: white !important;
-  font-weight: 500 !important;
+  font-weight: 400 !important;
+  margin-top: 5px !important;
 }
 
 .ant-notification-notice-description {
@@ -1744,17 +1833,16 @@ body {
 }
 
 .ant-notification-notice-wrapper {
-  box-shadow: none !important;
   /* border: 1px solid var(--border) !important; */
   border-radius: 0px !important;
   background-color: var(--bg-light) !important;
+  box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.01) !important;
 }
 
 .ant-notification-notice {
   background-color: var(--bg-light) !important;
   z-index: 10000 !important;
 }
-
 
 .ant-notification-notice-success,
 .ant-notification-notice-error {
@@ -1984,12 +2072,12 @@ body {
 
 #nprogress {
   pointer-events: none;
-  z-index: 9999 !important;
+  z-index: 99999 !important;
 }
 
 #nprogress .bar {
   position: fixed;
-  z-index: 9999 !important;
+  z-index: 99999 !important;
   top: 0;
   left: 0;
   width: 100%;
@@ -2548,15 +2636,14 @@ body {
 .task-icon {
   cursor: pointer;
   color: white;
-  opacity: 0.7;
-  transition: opacity 0.2s;
-  background-color: var(--border);
-  width: 28px;
-  height: 28px;
+  /* opacity: 0.7; */
+  transition: ease-in-out 0.15s;
+  width: 29px;
+  height: 29px;
   padding: 5px;
 
   &:hover {
-    opacity: 1;
+    background-color: var(--bg-light);
   }
 }
 
@@ -2578,7 +2665,7 @@ body {
 
 .project-task-item {
   width: auto;
-  height: 271px;
+  height: 278px;
   background-color: var(--bg);
   padding: 15px 23px;
   transition: background-color 0.1s linear;
@@ -2614,4 +2701,23 @@ body {
 
 .progress {
   background-color: var(--border);
+}
+
+.button-open-profile {
+  background: var(--color);
+}
+
+.button-open-profile:hover {
+  background: var(--color-hover);
+}
+
+.button-close-profile {
+  border: 1px solid var(--error);
+  color: var(--error);
+  transition: linear 0.3s;
+}
+
+.button-close-profile:hover {
+  background: var(--error);
+  color: white;
 }

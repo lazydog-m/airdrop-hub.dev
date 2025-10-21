@@ -3,22 +3,27 @@ import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 import DataTable from '@/components/DataTable';
 import { ButtonIcon, ButtonOutlinePrimary, ButtonPrimary } from '@/components/Button';
-import { Chrome, Loader, PencilLine, UserRoundPlus, WalletIcon } from 'lucide-react';
-import { Color, NOT_AVAILABLE } from '@/enums/enum';
+import { Chrome, Loader, PencilLine, Trash2 } from 'lucide-react';
+import { Color, StatusCommon } from '@/enums/enum';
 import Modal from '@/components/Modal';
 import useSpinner from '@/hooks/useSpinner';
-import { apiDelete, apiGet, apiPost, apiPut } from '@/utils/axios';
+import { apiDelete, apiGet, apiPut } from '@/utils/axios';
 import useConfirm from '@/hooks/useConfirm';
 import ProfileNewEditForm from '../new-edit/ProfileNewEditForm';
-import { convertEmailToEmailUsername, getMasked } from '@/utils/convertUtil';
-import ProfileWalletList from './profile-wallet/ProfileWalletList';
+import { convertEmailToEmailUsername } from '@/utils/convertUtil';
+import ProfileWeb3WalletList from './profile-wallet/ProfileWeb3WalletList';
 import useCopy from '@/hooks/useCopy';
 import useMessage from '@/hooks/useMessage';
 import { Checkbox } from '@/components/Checkbox';
+import { ResourceIconCheck, RESOURCES } from '@/commons/Resources';
+import { Metamask } from '@/commons/Icons';
+import SwitchStyle from '@/components/Switch';
 
 const columns = [
   { header: 'Tên Profile', align: 'left' },
-  { header: 'Tài Nguyên', align: 'left' },
+  { header: 'Accounts', align: 'left' },
+  { header: 'Web3 Wallets', align: 'left' },
+  { header: 'Trạng Thái', align: 'left' },
   { header: '', align: 'left' },
 ]
 
@@ -43,19 +48,16 @@ export default function ProfileDataTable({
 }) {
 
   const [open, setOpen] = React.useState(false);
-  const [openProfileWallet, setOpenProfileWallet] = React.useState(false);
+  const [openProfileWeb3Wallet, setOpenProfileWeb3Wallet] = React.useState(false);
   const [profile, setProfile] = React.useState({});
   const { onOpen, onClose } = useSpinner();
-  const { showConfirm, showSaved } = useConfirm();
+  const { showConfirm, onCloseLoader, showLoading, swalClose } = useConfirm();
   const { copied, handleCopy } = useCopy();
   const { onSuccess, onError } = useMessage();
   const isEdit = true;
 
   const handleCopyText = (id, text, type) => {
-    navigator.clipboard.writeText(text).then(() => {
-      handleCopy(id, type);
-      onSuccess('Đã copy!');
-    });
+    handleCopy(id, text, type);
   }
 
   const handleClickOpen = (item) => {
@@ -67,14 +69,39 @@ export default function ProfileDataTable({
     setOpen(false);
   };
 
-  const handleClickOpenProfileWallet = (item) => {
-    setOpenProfileWallet(true);
+  const handleClickOpenProfileWeb3Wallet = (item) => {
+    setOpenProfileWeb3Wallet(true);
     setProfile(item);
   };
 
-  const handleCloseProfileWallet = () => {
-    setOpenProfileWallet(false);
+  const handleCloseProfileWeb3Wallet = () => {
+    setOpenProfileWeb3Wallet(false);
   };
+
+  const handleUpdateStatus = (id, status) => {
+    const body = {
+      id,
+      status,
+    };
+    putStatus(body);
+  }
+
+  const triggerPut = (data) => {
+    onSuccess(`${data?.status === StatusCommon.IN_ACTIVE ? 'Kích hoạt' : 'Vô hiệu hóa'} thành công!`);
+    swalClose();
+  }
+
+  const putStatus = async (body) => {
+    try {
+      showLoading();
+      const response = await apiPut(`/profiles/status`, body);
+      onUpdateData(() => triggerPut(response.data.data));
+    } catch (error) {
+      console.error(error);
+      onError(error.message);
+      swalClose();
+    }
+  }
 
 
   const handleDelete = (id, name) => {
@@ -82,19 +109,18 @@ export default function ProfileDataTable({
   }
 
   const triggerRemove = () => {
-    onClose();
-    showSaved("Xóa thành công!")
+    onCloseLoader();
+    onSuccess("Xóa thành công!")
   }
 
   const remove = async (id) => {
     try {
-      onOpen();
       const response = await apiDelete(`/profiles/${id}`);
       onDeleteData(response.data.data, triggerRemove);
     } catch (error) {
       console.error(error);
       onError(error.message);
-      onClose();
+      onCloseLoader();
     }
   }
 
@@ -111,7 +137,6 @@ export default function ProfileDataTable({
       onAddLoadingId(id);
       const response = await apiGet(`/profiles/${id}/open`);
       const profileId = response.data.data;
-      // onSuccess("Mở thành công!");
       onAddOpenningId(profileId);
       onRemoveLoadingId(profileId);
     } catch (error) {
@@ -126,12 +151,11 @@ export default function ProfileDataTable({
       onAddLoadingId(id);
       const response = await apiGet(`/profiles/${id}/close`);
       const profileId = response.data.data;
-      // onSuccess("Đóng thành công!");
       onRemoveOpenningId(profileId);
       onRemoveLoadingId(profileId);
     } catch (error) {
       console.error(error);
-      // onError(error.message);
+      onError(error.message);
       onRemoveLoadingId(id);
     }
   }
@@ -140,18 +164,18 @@ export default function ProfileDataTable({
     return data.map((row) => (
       <TableRow
         className='table-row'
-        key={row.id}
-        selected={selected.includes(row.id)}
+        key={row?.id}
+        selected={selected.includes(row?.id)}
       >
         <TableCell align="left">
           <Checkbox
-            checked={selected.includes(row.id)}
-            onClick={() => onSelectRow(row.id)}
+            checked={selected.includes(row?.id)}
+            onClick={() => onSelectRow(row?.id)}
           />
         </TableCell>
         <TableCell align="left">
           <span className='fw-500 font-inter'>
-            {convertEmailToEmailUsername(row.email)}
+            {convertEmailToEmailUsername(row?.email)}
           </span>
         </TableCell>
         {/*
@@ -198,33 +222,95 @@ export default function ProfileDataTable({
           />
         </TableCell>
 */}
-        {/*
-              <TableCell align="left">
-                <SwitchStyle checked={row.status === WalletStatus.IN_ACTIVE} onClick={() => handleUpdateWalletStatus(row.id, row.status)} />
-              </TableCell>
-*/}
         <TableCell align="left">
-          <div className='d-flex align-items-center'>
-            <ButtonIcon
-              onClick={() => handleClickOpen(row)}
-              variant='ghost'
-              icon={<UserRoundPlus color={Color.PRIMARY} />}
-            />
-            <ButtonIcon
-              onClick={() => handleClickOpenProfileWallet(row)}
-              variant='ghost'
-              icon={<WalletIcon color={Color.BROWN} />}
-            />
+          <div
+            className='items-center d-flex select-none'
+          >
+            <div className='flex gap-10'>
+              {RESOURCES?.filter(res => !res?.type).map((res) => {
+                return res.id;
+              }).map(id => {
+                return <ResourceIconCheck
+                  key={id}
+                  id={id}
+                  check={row?.accounts?.includes(id)}
+                />
+              })
+              }
+            </div>
           </div>
+        </TableCell>
+        <TableCell align="left">
+          <div
+            className='items-center d-flex select-none'
+          >
+            <div className='flex gap-10'>
+              {RESOURCES?.filter(res => res?.type).map((res) => {
+                return res.id;
+              }).map(id => {
+                return <ResourceIconCheck
+                  key={id}
+                  id={id}
+                  check={row?.web3Wallets?.includes(id)}
+                />
+              })
+              }
+            </div>
+          </div>
+        </TableCell>
+        <TableCell align="left">
+          <SwitchStyle checked={row?.status === StatusCommon.IN_ACTIVE} onClick={() => handleUpdateStatus(row?.id, row?.status)} />
         </TableCell>
 
         <TableCell align="left" style={{ userSelect: '-moz-none' }}>
-          <div className='d-flex gap-25'>
-            <ButtonIcon
-              onClick={() => handleClickOpen(row)}
-              variant='ghost'
-              icon={<PencilLine color={Color.WARNING} />}
-            />
+          <div className='d-flex gap-30'>
+            {/* <div */}
+            {/*   className='d-flex gap-8 pdi-13 pdb-8 font-inter button-close-profile pointer' */}
+            {/*   onClick={() => handleCloseProfile(row.id)} */}
+            {/*   style={{ */}
+            {/*     opacity: loadingIds.has(row.id) ? '0.5' : '1', */}
+            {/*     pointerEvents: loadingIds.has(row.id) ? 'none' : '', */}
+            {/*   }} */}
+            {/* > */}
+            {/*   {loadingIds.has(row.id) ? <Loader className="animate-spin" /> : <Chrome size={'18px'} />} */}
+            {/**/}
+            {/*   <span className='mt-0 fw-500'> */}
+            {/*     Close */}
+            {/*   </span> */}
+            {/* </div> */}
+            {/**/}
+            {/* <div */}
+            {/*   className='d-flex gap-8 pdi-13 pdb-8 font-inter button-open-profile pointer' */}
+            {/*   onClick={() => handleOpenProfile(row.id)} */}
+            {/*   style={{ */}
+            {/*     opacity: loadingIds.has(row.id) ? '0.5' : '1', */}
+            {/*     pointerEvents: loadingIds.has(row.id) ? 'none' : '', */}
+            {/*   }} */}
+            {/* > */}
+            {/*   {loadingIds.has(row.id) ? <Loader className="animate-spin" /> : <Chrome size={'18px'} />} */}
+            {/**/}
+            {/*   <span className='mt-0 fw-500'> */}
+            {/*     Open */}
+            {/*   </span> */}
+            {/* </div> */}
+
+            <div className='d-flex ms-20'>
+              <ButtonIcon
+                onClick={() => handleClickOpen(row)}
+                variant='ghost'
+                icon={<PencilLine color={Color.WARNING} />}
+              />
+              <ButtonIcon
+                onClick={() => handleClickOpenProfileWeb3Wallet(row)}
+                variant='ghost'
+                icon={<Metamask />}
+              />
+              <ButtonIcon
+                onClick={() => handleDelete(row?.id, convertEmailToEmailUsername(row?.email))}
+                variant='ghost'
+                icon={<Trash2 color={Color.ORANGE} />}
+              />
+            </div>
             {openningIds.has(row.id) ?
               <ButtonOutlinePrimary
                 onClick={() => handleCloseProfile(row.id)}
@@ -232,10 +318,10 @@ export default function ProfileDataTable({
                   // width: '80px',
                   opacity: loadingIds.has(row.id) ? '0.5' : '1',
                   pointerEvents: loadingIds.has(row.id) ? 'none' : '',
-                  height: '36.5px',
+                  height: '34.5px',
                 }}
                 icon={loadingIds.has(row.id) ? <Loader className="animate-spin" /> : <Chrome />}
-                title='Đóng'
+                title='Close'
               />
               :
               <ButtonPrimary
@@ -244,10 +330,10 @@ export default function ProfileDataTable({
                   // width: '60px',
                   opacity: loadingIds.has(row.id) ? '0.5' : '1',
                   pointerEvents: loadingIds.has(row.id) ? 'none' : '',
-                  height: '36.5px',
+                  height: '35px',
                 }}
                 icon={loadingIds.has(row.id) ? <Loader className="animate-spin" /> : <Chrome />}
-                title='Mở'
+                title='Open'
               />
             }
           </div>
@@ -276,6 +362,9 @@ export default function ProfileDataTable({
       />
 
       <Modal
+        // height={'725px'}
+        width={'1400px'}
+        size='xl'
         isOpen={open}
         onClose={handleClose}
         title={"Cập nhật profile"}
@@ -294,11 +383,11 @@ export default function ProfileDataTable({
         height={'715px'}
         width={'1500px'}
         size='xl'
-        isOpen={openProfileWallet}
-        onClose={handleCloseProfileWallet}
-        title={`Danh sách ví Web3 của profile '${convertEmailToEmailUsername(profile?.email)}'`}
+        isOpen={openProfileWeb3Wallet}
+        onClose={handleCloseProfileWeb3Wallet}
+        title={`Web3 Wallets - ${convertEmailToEmailUsername(profile?.email)}`}
         content={
-          <ProfileWalletList
+          <ProfileWeb3WalletList
             profileId={profile?.id}
           />
         }

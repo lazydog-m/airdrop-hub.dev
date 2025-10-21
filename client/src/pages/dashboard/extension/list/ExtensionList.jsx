@@ -1,28 +1,30 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { ButtonPrimary } from "@/components/Button";
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { ButtonDanger, ButtonPrimary } from "@/components/Button";
 import Container from "@/components/Container";
 import { HeaderAction } from "@/components/HeaderSection";
 import Page from "@/components/Page";
-import { FilePlus, } from 'lucide-react';
+import { CirclePlus, DatabaseZap, Plus, Trash2Icon } from 'lucide-react';
+import Modal from '@/components/Modal';
 import { apiGet } from '@/utils/axios';
+import { CURRENT_DATA_TYPE, TRASH_DATA_TYPE, WalletStatus } from '@/enums/enum';
 import useSpinner from '@/hooks/useSpinner';
-import ScriptDataTable from './ScriptDataTable.jsx';
-import ScriptFilterSearch from './ScriptFilterSearch.jsx';
+import ExtensionNewEditForm from '../new-edit/ExtensionNewEditForm';
+import ExtensionFilterSearch from './ExtensionFilterSearch';
+import ExtensionDataTable from './ExtensionDataTable';
 import useMessage from '@/hooks/useMessage';
 import useTable from '@/hooks/useTable';
 import { delayApi } from '@/utils/commonUtil';
-import { Link } from 'react-router-dom';
-import { PATH_DASHBOARD } from '@/routes/path.js';
 
-const ScriptDataTableMemo = React.memo(ScriptDataTable);
+const ExtensionDataTableMemo = React.memo(ExtensionDataTable);
 
-export default function ScriptList() {
+export default function ExtensionList() {
+  const [open, setOpen] = useState(false);
   const [data, setData] = useState([]);
   const [pagination, setPagination] = useState({});
   const { onOpen, onClose } = useSpinner();
   const { onError } = useMessage();
 
-  const [selectedStatusItems, setSelectedStatusItems] = useState([]);
+  const [selectedStatusItems, setSelectedStatusItems] = useState([WalletStatus.IN_ACTIVE]);
   const [search, setSearch] = useState('');
 
   const {
@@ -42,18 +44,13 @@ export default function ScriptList() {
     }
 
     try {
-      if (!dataTrigger) {
-        onOpen();
-      }
-
-      const response = await apiGet("/scripts", params);
+      onOpen();
+      const response = await apiGet("/wallets", params);
 
       if (dataTrigger) {
-        delayApi(() => {
-          setData(response.data.data.data || []);
-          setPagination(response.data.data.pagination || {});
-          onTrigger();
-        })
+        setData(response.data.data.data || []);
+        setPagination(response.data.data.pagination || {});
+        onTrigger();
       }
       else {
         delayApi(() => {
@@ -61,6 +58,8 @@ export default function ScriptList() {
           setPagination(response.data.data.pagination || {});
           onClose();
         })
+        setTimeout(() => {
+        }, 100)
       }
     } catch (error) {
       console.error(error);
@@ -78,6 +77,10 @@ export default function ScriptList() {
     onSelectRow(id);
   }, [selected])
 
+  const handleUpdateData = useCallback((onTrigger = () => { }) => {
+    fetchApi(true, onTrigger)
+  }, [search, page, selectedStatusItems]);
+
   const handleDeleteData = useCallback((id, onTrigger = () => { }) => {
     fetchApi(true, () => {
       const newSelected = selected.filter(selected => selected !== id);
@@ -85,6 +88,14 @@ export default function ScriptList() {
       onTrigger();
     })
   }, [search, page, selectedStatusItems, selected]);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
 
   const handleChangeSearch = (value) => {
     setSearch(value);
@@ -114,25 +125,24 @@ export default function ScriptList() {
 
   useEffect(() => {
     fetchApi();
-  }, [selectedStatusItems, search, page])
+  }, [selectedStatusItems,/*  dataType, */ search, page])
 
   return (
-    <Page title='Scripts'>
+    <Page title='Ví Web3'>
       <Container>
 
         <HeaderAction
-          heading='Danh sách scripts'
+          heading='Danh sách ví Web3'
           action={
-            <Link to={PATH_DASHBOARD.script.create}>
-              <ButtonPrimary
-                icon={<FilePlus />}
-                title='Tạo script'
-              />
-            </Link>
+            <ButtonPrimary
+              icon={<Plus strokeWidth={2.5} />}
+              title='Thêm ví Web3'
+              onClick={handleClickOpen}
+            />
           }
         />
 
-        <ScriptFilterSearch
+        <ExtensionFilterSearch
           selectedStatusItems={selectedStatusItems}
           onChangeSelectedStatusItems={handleChangeSelectedStatusItems}
           onClearSelectedStatusItems={() => setSelectedStatusItems([])}
@@ -141,17 +151,43 @@ export default function ScriptList() {
           search={search}
         />
 
-        <ScriptDataTableMemo
+        <ExtensionDataTableMemo
+          // dataType={dataType}
           pagination={pagination}
           onChangePage={handleChangePage}
+
           data={data}
+          onUpdateData={handleUpdateData}
+          onDeleteData={handleDeleteData}
+
           selected={selected}
           onSelectAllRows={handleSelectAllRows}
           onSelectRow={handleSelectRow}
-          onDeleteData={handleDeleteData}
+        />
+
+        <Modal
+          size='sm'
+          isOpen={open}
+          onClose={handleClose}
+          title={"Thêm mới ví Web3"}
+          content={
+            <ExtensionNewEditForm
+              onCloseModal={handleClose}
+              onUpdateData={handleUpdateData}
+            />
+          }
         />
 
       </Container>
     </Page>
   )
 }
+{/*
+            <div className='d-flex gap-10'>
+              <ButtonDanger
+                icon={dataType === TRASH_DATA_TYPE ? <DatabaseZap /> : <Trash2Icon />}
+                title={dataType === TRASH_DATA_TYPE ? 'Data hiện tại' : 'Thùng rác'}
+                onClick={() => setDataType((prev) => prev === TRASH_DATA_TYPE ? CURRENT_DATA_TYPE : TRASH_DATA_TYPE)}
+              />
+            </div>
+*/}

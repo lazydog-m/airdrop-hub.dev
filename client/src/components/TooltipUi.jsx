@@ -11,6 +11,7 @@ export default function TooltipUi({
   content,
   children,
   side = 'top',
+  modal = false,
   ...other
 }) {
 
@@ -21,14 +22,14 @@ export default function TooltipUi({
           {children}
         </TooltipTrigger>
         <TooltipContent
-          arrow={true}
+          portal={modal ? false : true}
           side={side}
-          className='font-inter fw-400'
+          className='font-inter fw-500'
           style={{
-            borderRadius: '4px',
+            borderRadius: '6px',
             backgroundColor: '#585858',
             color: 'white',
-            fontSize: '12px'
+            fontSize: '13px'
           }}
         >
           <span className="ms-0">

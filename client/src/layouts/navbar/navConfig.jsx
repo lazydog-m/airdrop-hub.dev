@@ -51,7 +51,7 @@ export const group = [
       {
         link: PATH_DASHBOARD.wallet,
         key: 'wallet',
-        label: <Link to={PATH_DASHBOARD.wallet.list}>
+        label: <Link to={PATH_DASHBOARD.web3_wallet.list}>
           <SpanStyle label="Quản Lý Ví" />
         </Link>,
         icon: ICONS.wallet,

@@ -16,10 +16,10 @@ export const PATH_DASHBOARD = {
     create: path(ROOTS_DASHBOARD, '/profile/create'),
     edit: (id) => path(ROOTS_DASHBOARD, `/profile/${id}/edit`),
   },
-  wallet: {
-    list: path(ROOTS_DASHBOARD, '/wallet/list'),
-    create: path(ROOTS_DASHBOARD, '/wallet/create'),
-    edit: (id) => path(ROOTS_DASHBOARD, `/wallet/${id}/edit`),
+  web3_wallet: {
+    list: path(ROOTS_DASHBOARD, '/web3-wallet/list'),
+    create: path(ROOTS_DASHBOARD, '/web3-wallet/create'),
+    edit: (id) => path(ROOTS_DASHBOARD, `/web3-wallet/${id}/edit`),
   },
   task: {
     list: path(ROOTS_DASHBOARD, '/task/list'),

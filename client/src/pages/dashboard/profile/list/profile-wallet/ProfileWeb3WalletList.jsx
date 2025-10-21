@@ -1,48 +1,55 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { ButtonPrimary } from "@/components/Button";
+import { CirclePlus, Plus } from 'lucide-react';
 import Modal from '@/components/Modal';
 import { apiGet } from '@/utils/axios';
 import useSpinner from '@/hooks/useSpinner';
+import ProfileWeb3WalletFilterSearch from './ProfileWeb3WalletFilterSearch';
+import ProfileWeb3WalletDataTable from './ProfileWeb3WalletDataTable';
+import ProfileWeb3WalletNewEditForm from '../../new-edit/ProfileWeb3WalletNewEditForm';
 import useMessage from '@/hooks/useMessage';
 import useTable from '@/hooks/useTable';
 import { delayApi } from '@/utils/commonUtil';
-import DailyTaskFilterSearch from './DailyTaskFilterSearch';
-import DailyTaskDataTable from './DailyTaskDataTable';
-import { ButtonPrimary } from '@/components/Button';
-import { ClipboardPlus } from 'lucide-react';
-import DailyTaskNewEditForm from '../../new-edit/DailyTaskNewEditForm';
 
-const DailyTaskDataTableMemo = React.memo(DailyTaskDataTable);
+const ProfileWeb3WalletDataTableMemo = React.memo(ProfileWeb3WalletDataTable);
 
-export default function DailyTaskList({ projectName = '', projectId = '' }) {
-  const [open, setOpen] = useState(false); // modal
+export default function ProfileWeb3WalletList({ profileId = '' }) {
+  const [open, setOpen] = useState(false);
   const [data, setData] = useState([]);
   const [pagination, setPagination] = useState({});
   const { onOpen, onClose } = useSpinner();
   const { onError } = useMessage();
 
   const [search, setSearch] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('all');
 
   const {
+    onSelectRow,
+    selected,
+    setSelected,
+    onSelectAllRows,
     page,
     onChangePage,
   } = useTable({});
 
   const fetchApi = async (dataTrigger = false, onTrigger = () => { }) => {
     const params = {
-      page,
       search,
+      page,
     }
 
     try {
-      onOpen();
-      const response = await apiGet(`/tasks/${projectId}`, params);
-      console.log(response.data.data)
+      if (!dataTrigger) {
+        onOpen();
+      }
+
+      const response = await apiGet(`/profile-web3-wallets/${profileId}`, params);
 
       if (dataTrigger) {
-        setData(response.data.data.data || []);
-        setPagination(response.data.data.pagination || {});
-        onTrigger();
+        delayApi(() => {
+          setData(response.data.data.data || []);
+          setPagination(response.data.data.pagination || {});
+          onTrigger();
+        })
       }
       else {
         delayApi(() => {
@@ -51,7 +58,6 @@ export default function DailyTaskList({ projectName = '', projectId = '' }) {
           onClose();
         })
       }
-
     } catch (error) {
       console.error(error);
       onError(error.message);
@@ -59,21 +65,26 @@ export default function DailyTaskList({ projectName = '', projectId = '' }) {
     }
   }
 
+  const handleSelectAllRows = React.useCallback((checked) => {
+    const selecteds = data.map((row) => row.id);
+    onSelectAllRows(checked, selecteds);
+  }, [data])
+
+  const handleSelectRow = React.useCallback((id) => {
+    onSelectRow(id);
+  }, [selected])
+
   const handleUpdateData = useCallback((onTrigger = () => { }) => {
     fetchApi(true, onTrigger)
-  }, [
-    search,
-    page,
-  ]);
+  }, [search, page]);
 
-  const handleDeleteData = useCallback((onTrigger = () => { }) => {
+  const handleDeleteData = useCallback((id, onTrigger = () => { }) => {
     fetchApi(true, () => {
+      const newSelected = selected.filter(selected => selected !== id);
+      setSelected(newSelected);
       onTrigger();
     })
-  }, [
-    search,
-    page,
-  ]);
+  }, [search, page, selected]);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -83,50 +94,40 @@ export default function DailyTaskList({ projectName = '', projectId = '' }) {
     setOpen(false);
   };
 
-  const handleChangePage = useCallback((newPage) => {
-    onChangePage(newPage)
-  }, [])
-
   const handleChangeSearch = (value) => {
     setSearch(value);
     onChangePage(1);
   }
 
-  const handleChangeSelectedStatus = (selected) => {
-    setSelectedStatus(selected);
-  };
-
   const handleClearAllSelectedItems = () => {
     setSearch('');
-    setSelectedStatus('all');
     onChangePage(1);
   }
 
+  const handleChangePage = useCallback((newPage) => {
+    onChangePage(newPage)
+  }, [])
+
   useEffect(() => {
     fetchApi();
-  }, [
-    search,
-    selectedStatus,
-    page,
-  ])
+  }, [search, page])
 
   return (
-    <div className='overflow-hidden'>
-      <DailyTaskFilterSearch
+    <div>
+      <ProfileWeb3WalletFilterSearch
         action={
           <ButtonPrimary
-            icon={<ClipboardPlus />}
-            title='Thêm task'
+            icon={<Plus strokeWidth={2.5} />}
+            title='Thêm ví Web3'
             onClick={handleClickOpen}
           />
         }
         onClearAllSelectedItems={handleClearAllSelectedItems}
-        search={search}
         onChangeSearch={handleChangeSearch}
-        onChangeSelectedStatus={handleChangeSelectedStatus}
-        selectedStatus={selectedStatus}
+        search={search}
       />
-      <DailyTaskDataTableMemo
+
+      <ProfileWeb3WalletDataTableMemo
         pagination={pagination}
         onChangePage={handleChangePage}
 
@@ -134,23 +135,26 @@ export default function DailyTaskList({ projectName = '', projectId = '' }) {
         onUpdateData={handleUpdateData}
         onDeleteData={handleDeleteData}
 
-        projectName={projectName}
-        projectId={projectId}
+        selected={selected}
+        onSelectAllRows={handleSelectAllRows}
+        onSelectRow={handleSelectRow}
       />
 
       <Modal
+        size='md'
+        width={'700px'}
         isOpen={open}
         onClose={handleClose}
-        title={"Thêm mới task hằng ngày"}
+        title={"Thêm ví Web3 vào profile"}
         content={
-          <DailyTaskNewEditForm
-            projectName={projectName}
-            projectId={projectId}
+          <ProfileWeb3WalletNewEditForm
+            profileId={profileId}
             onCloseModal={handleClose}
             onUpdateData={handleUpdateData}
           />
         }
       />
+
     </div>
   )
 }

@@ -15,7 +15,7 @@ import useMessage from "@/hooks/useMessage";
 import { ErrorMessage } from "@/components/ErrorMessage";
 import Combobox from "@/components/Combobox";
 
-export default function ProfileWalletNewEditForm({ isEdit, currentProfileWallet, onUpdateData, onCloseModal, profileId }) {
+export default function ProfileWeb3WalletNewEditForm({ isEdit, currentProfileWeb3Wallet, onUpdateData, onCloseModal, profileId }) {
 
   const [wallets, setWallets] = useState([]);
 
@@ -29,9 +29,9 @@ export default function ProfileWalletNewEditForm({ isEdit, currentProfileWallet,
   });
 
   const defaultValues = {
-    wallet_address: currentProfileWallet?.wallet_address || '',
-    secret_phrase: currentProfileWallet?.secret_phrase || '',
-    wallet_name: currentProfileWallet?.name || '',
+    wallet_name: currentProfileWeb3Wallet?.name || '',
+    wallet_address: currentProfileWeb3Wallet?.wallet_address || '',
+    secret_phrase: currentProfileWeb3Wallet?.secret_phrase || '',
   };
 
   const methods = useForm({
@@ -47,18 +47,17 @@ export default function ProfileWalletNewEditForm({ isEdit, currentProfileWallet,
     watch, getValues,
   } = methods;
 
-  const { showConfirm, showSaved } = useConfirm();
   const { onSuccess, onError } = useMessage();
-  const { onOpen, onClose } = useSpinner();
+  const { showConfirm, onCloseLoader } = useConfirm();
 
   const onSubmit = async (data) => {
     if (isEdit) {
       const body = {
         ...data,
-        id: currentProfileWallet.id,
-        profile_id: currentProfileWallet.profile_id,
+        id: currentProfileWeb3Wallet.id,
+        profile_id: currentProfileWeb3Wallet.profile_id,
         wallet_id: findWalletIdByName(data.wallet_name),
-        need_check_wallet_id: data.wallet_name !== currentProfileWallet.name, // ví chọn khác ví hiện tại
+        need_check_wallet_id: data.wallet_name !== currentProfileWeb3Wallet.name, // ví chọn khác ví hiện tại
       }
       showConfirm("Xác nhận cập nhật ví Web3 của profile?", () => put(body));
     }
@@ -75,44 +74,42 @@ export default function ProfileWalletNewEditForm({ isEdit, currentProfileWallet,
 
   const triggerPost = () => {
     onCloseModal();
-    onClose();
+    onCloseLoader();
     onSuccess("Thêm mới thành công!");
   }
 
   const triggerPut = () => {
     onCloseModal();
-    onClose();
+    onCloseLoader();
     onSuccess("Cập nhật thành công!");
   }
 
   const post = async (body) => {
     try {
-      onOpen();
-      const response = await apiPost("/profile-wallets", body);
+      const response = await apiPost("/profile-web3-wallets", body);
       onUpdateData(triggerPost)
     } catch (error) {
       console.error(error);
       onError(error.message);
-      onClose();
+      onCloseLoader();
     }
   }
 
   const put = async (body) => {
     try {
-      onOpen();
-      const response = await apiPut("/profile-wallets", body);
+      const response = await apiPut("/profile-web3-wallets", body);
       onUpdateData(triggerPut)
     } catch (error) {
       console.error(error);
       onError(error.message);
-      onClose();
+      onCloseLoader();
     }
   }
 
   useEffect(() => {
     const fetch = async () => {
       try {
-        const response = await apiGet("/wallets/no-page");
+        const response = await apiGet("/web3-wallets/no-page");
         setWallets(response.data.data || []);
         console.log(response.data.data)
       } catch (error) {

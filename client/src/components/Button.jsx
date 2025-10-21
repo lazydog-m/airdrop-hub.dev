@@ -6,10 +6,8 @@ import { lightenColor } from "@/utils/convertUtil";
 export const ButtonPrimary = ({ icon, title, ...other }) => {
   return (
     <Button className='button-primary select-none font-inter pointer color-white h-40 fs-13' {...other}>
-      {/* <span className="mb-0.5 d-flex gap-2 items-center"> */}
       {icon}
       {title}
-      {/* </span> */}
     </Button>
   )
 }
@@ -33,6 +31,18 @@ export const ButtonInfo = ({ icon, title, ...other }) => {
 export const ButtonOutlinePrimary = ({ icon, title, ...other }) => {
   return (
     <Button className='button-outline-primary select-none font-inter pointer h-40 fs-13 d-flex' {...other}>
+      {icon}
+      {title}
+    </Button>
+  )
+}
+
+export const ButtonOrange = ({ icon, title, ...other }) => {
+  return (
+    <Button
+      className='font-inter button-orange select-none bdr pointer color-white h-40 fs-13 d-flex'
+      {...other}
+    >
       {icon}
       {title}
     </Button>

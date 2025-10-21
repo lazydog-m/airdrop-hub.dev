@@ -10,10 +10,10 @@ import { useForm } from 'react-hook-form';
 import { ButtonPrimary } from "@/components/Button";
 import { apiPost, apiPut } from "@/utils/axios";
 import useConfirm from "@/hooks/useConfirm";
-import useSpinner from "@/hooks/useSpinner";
 import { PATH_DASHBOARD } from "@/routes/path";
 import useMessage from "@/hooks/useMessage";
 import RHFTextarea from "@/components/hook-form/RHFTextarea";
+import { delayApi } from "@/utils/commonUtil";
 
 export default function ScriptNewEditForm({
   isEdit,
@@ -46,8 +46,7 @@ export default function ScriptNewEditForm({
     watch, getValues, setError, formState: { isValid, errors }
   } = methods;
 
-  const { showConfirm, showSaved } = useConfirm();
-  const { onOpen, onClose } = useSpinner();
+  const { showConfirm, onCloseLoader, isLoader } = useConfirm();
   const { onSuccess, onError } = useMessage();
 
   const navigate = useNavigate();
@@ -67,7 +66,7 @@ export default function ScriptNewEditForm({
         }),
       }
       console.log(body)
-      showConfirm("Xác nhận cập nhật script?", () => put(body));
+      showConfirm("Xác nhận cập nhật script?", () => put(body), '', () => trigger());
     }
     else {
       const body = {
@@ -83,35 +82,40 @@ export default function ScriptNewEditForm({
 
       }
       console.log(body)
-      showConfirm("Xác nhận tạo script?", () => post(body));
+      showConfirm("Xác nhận tạo script?", () => post(body), '', () => trigger());
     }
+  }
+
+  const trigger = () => {
+    navigate(PATH_DASHBOARD.script.list)
   }
 
   const post = async (body) => {
     try {
-      onOpen();
       const response = await apiPost("/scripts", body);
-      onClose();
-      navigate(PATH_DASHBOARD.script.list)
-      onSuccess("Tạo mới thành công!");
+
+      delayApi(() => {
+        onCloseLoader();
+        onSuccess("Tạo mới thành công!");
+      })
     } catch (error) {
       console.error(error);
       onError(error.message);
-      onClose();
+      onCloseLoader();
     }
   }
 
   const put = async (body) => {
     try {
-      onOpen();
       const response = await apiPut("/scripts", body);
-      onClose();
-      navigate(PATH_DASHBOARD.script.list)
-      onSuccess("Cập nhật thành công!");
+      delayApi(() => {
+        onCloseLoader();
+        onSuccess("Tạo mới thành công!");
+      })
     } catch (error) {
       console.error(error);
       onError(error.message);
-      onClose();
+      onCloseLoader();
     }
   }
   useEffect(() => {

@@ -5,7 +5,6 @@ import DataTable from '@/components/DataTable';
 import { ButtonIcon } from '@/components/Button';
 import { PencilLine, Trash2 } from 'lucide-react';
 import { Color } from '@/enums/enum';
-import useSpinner from '@/hooks/useSpinner';
 import { apiDelete, apiPut } from '@/utils/axios';
 import useConfirm from '@/hooks/useConfirm';
 import useMessage from '@/hooks/useMessage';
@@ -16,6 +15,7 @@ import SwitchStyle from '@/components/Switch';
 
 const columns = [
   { header: 'Tên Script', align: 'left' },
+  { header: 'Ngày Tạo', align: 'left' },
   { header: 'Trạng thái', align: 'left' },
   { header: '', align: 'left' },
 ]
@@ -31,8 +31,7 @@ export default function ScriptDataTable({
   pagination,
   selected = []
 }) {
-  const { onOpen, onClose } = useSpinner();
-  const { showConfirm, showSaved } = useConfirm();
+  const { showConfirm, onCloseLoader } = useConfirm();
   const { onSuccess, onError } = useMessage();
 
   const handleDelete = (fileName) => {
@@ -40,19 +39,18 @@ export default function ScriptDataTable({
   }
 
   const triggerRemove = () => {
-    onClose();
+    onCloseLoader();
     onSuccess("Xóa script thành công!")
   }
 
   const remove = async (fileName) => {
     try {
-      onOpen();
       const response = await apiDelete(`/scripts/${fileName}`);
       onDeleteData(response.data.data, triggerRemove);
     } catch (error) {
       console.error(error);
       onError(error.message);
-      onClose();
+      onCloseLoader();
     }
   }
 
@@ -84,11 +82,11 @@ export default function ScriptDataTable({
               icon={<PencilLine color={Color.WARNING} />}
             />
           </Link>
-          {/* <ButtonIcon */}
-          {/*   onClick={() => handleDelete(row.fileName)} */}
-          {/*   variant='ghost' */}
-          {/*   icon={<Trash2 color={Color.DANGER} />} */}
-          {/* /> */}
+          <ButtonIcon
+            onClick={() => handleDelete(row.fileName)}
+            variant='ghost'
+            icon={<Trash2 color={Color.DANGER} />}
+          />
         </TableCell>
       </TableRow >
     ))

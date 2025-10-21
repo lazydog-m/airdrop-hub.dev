@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { convertWalletStatusEnumToColorHex, convertWalletStatusEnumToText, darkenColor, lightenColor } from '@/utils/convertUtil';
 import useDebounce from '@/hooks/useDebounce';
 
-export default function WalletFilterSearch({
+export default function ExtensionFilterSearch({
   selectedStatusItems,
   onChangeSelectedStatusItems,
   onClearSelectedStatusItems,

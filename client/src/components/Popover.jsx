@@ -28,7 +28,7 @@ export default function Popover({
           portal={false}
           side={side}
           align={align}
-          className={`bdr ${mt} bg-modal border-1`}
+          className={`bdr ${mt} bg-color border-1`}
           style={{
             width: 'auto',
             boxShadow: 'none',

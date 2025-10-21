@@ -5,6 +5,7 @@ import logo from '../assets/img/playwright.png'
 const initialState = {
   onOpen: () => { },
   onClose: () => { },
+  isLoading: false,
 }
 
 const SpinnerContext = createContext(initialState);
@@ -23,7 +24,7 @@ const rootStyle = {
   alignItems: "center",
   justifyContent: "center",
   backgroundColor: "rgba(0, 0, 0, 0.7)",
-  zIndex: 9999,
+  zIndex: 99999,
 }
 
 function SpinnerProvider({ children }) {
@@ -42,6 +43,7 @@ function SpinnerProvider({ children }) {
       value={{
         onOpen: handleOpen,
         onClose: handleClose,
+        isLoading: isOpen,
       }}
     >
       {isOpen &&

@@ -3,23 +3,30 @@ import { Input } from "@/components/ui/input";
 import { CirclePause, CirclePlay, CirclePlus, Grip, ListFilter, Pause, Play } from 'lucide-react';
 import Popover from "@/components/Popover";
 import { ButtonGhost, ButtonOutline, ButtonOutlinePrimary, ButtonOutlineTags, ButtonPrimary } from '@/components/Button';
-import { Color, WalletStatus } from '@/enums/enum';
+import { Color, StatusCommon } from '@/enums/enum';
 import { Badge } from '@/components/ui/badge';
 import useDebounce from '@/hooks/useDebounce';
 import useSpinner from '@/hooks/useSpinner';
 import { apiGet } from '@/utils/axios';
 import useMessage from '@/hooks/useMessage';
+import { convertStatusCommonEnumToColorHex, convertStatusCommonEnumToText, darkenColor, lightenColor } from '@/utils/convertUtil';
+import { DropdownCheckboxMenu } from '@/components/Checkbox';
 
 export default function ProfileFilterSearch({
   selectedStatusItems,
   onChangeSelectedStatusItems,
   onClearSelectedStatusItems,
+
   onClearAllSelectedItems,
+
   search,
   onChangeSearch,
+
   selected = [],
+
   onAddOpenningIds,
   onRemoveOpenningIds,
+
   loadingIds = new Set(),
   openningIds = new Set(),
 }) {
@@ -159,17 +166,6 @@ export default function ProfileFilterSearch({
           />
         }
 
-        {search &&
-          <ButtonGhost
-            icon={<ListFilter color={Color.ORANGE} />}
-            onClick={clearAll}
-          // title={
-          //   <span style={{ color: Color.ORANGE }}>Làm mới</span>
-          // }
-          />
-        }
-
-        {/*
         <div className="filters-button d-flex gap-10">
           <Popover className='button-dropdown-filter-checkbox'
             trigger={
@@ -179,14 +175,18 @@ export default function ProfileFilterSearch({
                 className='button-outlined font-inter pointer color-white h-40 fs-13 d-flex'
                 selected={selectedStatusItems}
                 tags={
-                  <Tags selectedItems={selectedStatusItems} style={convertWalletStatusEnumToColorHex} convert={convertWalletStatusEnumToText} />
+                  <Tags
+                    selectedItems={selectedStatusItems}
+                    style={convertStatusCommonEnumToColorHex}
+                    convert={convertStatusCommonEnumToText}
+                  />
 
                 }
               />
             }
             content={
-              <CheckboxItems
-                convert={convertWalletStatusEnumToText}
+              <DropdownCheckboxMenu
+                convert={convertStatusCommonEnumToText}
                 items={statusFilters.items}
                 selectedItems={selectedStatusItems}
                 onChangeSelectedItems={onChangeSelectedStatusItems}
@@ -195,8 +195,16 @@ export default function ProfileFilterSearch({
             }
           />
 
+          {(selectedStatusItems.length > 0 || search) &&
+            <ButtonGhost
+              icon={<ListFilter color={Color.ORANGE} />}
+              onClick={clearAll}
+            />
+          }
+
         </div>
-*/}
+
+
       </div>
     </div>
   )
@@ -205,7 +213,7 @@ export default function ProfileFilterSearch({
 const statusFilters = {
   name: 'Trạng thái',
   items: [
-    WalletStatus.IN_ACTIVE, WalletStatus.UN_ACTIVE
+    StatusCommon.IN_ACTIVE, StatusCommon.UN_ACTIVE
   ],
 };
 
@@ -214,8 +222,12 @@ const Tags = ({ selectedItems, style = () => { }, convert }) => {
     selectedItems.map((item) => {
       return (
         <Badge
-          style={{ backgroundColor: style(item) }}
-          className='text-capitalize font-inter fw-400 fs-12'
+          style={{
+            backgroundColor: darkenColor(style(item)),
+            borderColor: lightenColor(style(item)),
+            color: 'white'
+          }}
+          className='text-capitalize fw-400 fs-12 bdr'
         >
           {convert ? convert(item) : item}
         </Badge>

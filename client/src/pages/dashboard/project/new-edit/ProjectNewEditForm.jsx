@@ -15,8 +15,7 @@ import { convertDailyTaskRefreshEnumToText, convertProjectStatusEnumToText } fro
 import useMessage from "@/hooks/useMessage";
 import RHFTextarea from "@/components/hook-form/RHFTextarea";
 import AutocompleteTag from "@/components/AutocompleTag";
-import { RESOURCES } from "@/commons/Resources";
-import Combobox from "@/components/Combobox";
+import { ResourceIcon, RESOURCES } from "@/commons/Resources";
 
 export default function ProjectNewEditForm({ onCloseModal, isEdit, currentProject, onUpdateData }) {
 
@@ -49,7 +48,7 @@ export default function ProjectNewEditForm({ onCloseModal, isEdit, currentProjec
     watch, getValues,
   } = methods;
 
-  const { showConfirm } = useConfirm();
+  const { showConfirm, onCloseLoader } = useConfirm();
   const { onOpen, onClose } = useSpinner();
   const { onSuccess, onError } = useMessage();
 
@@ -70,37 +69,35 @@ export default function ProjectNewEditForm({ onCloseModal, isEdit, currentProjec
 
   const triggerPost = () => {
     onCloseModal();
-    onClose();
+    onCloseLoader();
     onSuccess("Thêm mới thành công!");
   }
 
   const triggerPut = () => {
     onCloseModal();
-    onClose();
+    onCloseLoader();
     onSuccess("Cập nhật thành công!");
   }
 
   const post = async (body) => {
     try {
-      onOpen();
       const response = await apiPost("/projects", body);
       onUpdateData(triggerPost);
     } catch (error) {
       console.error(error);
       onError(error.message);
-      onClose();
+      onCloseLoader();
     }
   }
 
   const put = async (body) => {
     try {
-      onOpen();
       const response = await apiPut("/projects", body);
       onUpdateData(triggerPut);
     } catch (error) {
       console.error(error);
       onError(error.message);
-      onClose();
+      onCloseLoader();
     }
   }
 
@@ -230,7 +227,7 @@ export default function ProjectNewEditForm({ onCloseModal, isEdit, currentProjec
                   placeholderSearch='tài nguyên'
                   tags={
                     field.value?.map((id) => {
-                      return RESOURCES.find(res => res.id === id)?.icon
+                      return <ResourceIcon id={id} key={id} />
                     })
                   }
                 />

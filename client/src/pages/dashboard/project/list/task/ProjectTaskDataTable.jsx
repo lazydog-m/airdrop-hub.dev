@@ -1,9 +1,9 @@
-import { ButtonIcon, ButtonPrimary } from "@/components/Button";
+import { ButtonIcon, ButtonInfo, ButtonOutlinePrimary, ButtonPrimary } from "@/components/Button";
 import DropdownUi from "@/components/DropdownUi";
 import { Badge } from "@/components/ui/badge";
-import { Color } from "@/enums/enum";
+import { Color, DailyTaskRefresh, StatusCommon } from "@/enums/enum";
 import { darkenColor, lightenColor } from "@/utils/convertUtil";
-import { CirclePlay, ClipboardClock, ClipboardPen, Clock, Ellipsis, FileSymlink, Star, ToggleLeft, ToggleRight, Trash2, UserRoundCheck, } from "lucide-react";
+import { CheckCheck, CirclePlay, ClipboardClock, ClipboardPen, Clock, Ellipsis, FileSymlink, Star, ToggleLeft, ToggleRight, Trash2, UserRoundCheck, } from "lucide-react";
 import React, { useState } from "react";
 import { RiTodoLine } from "react-icons/ri";
 import { GrSchedulePlay } from "react-icons/gr";
@@ -15,11 +15,13 @@ import EmptyData from "@/components/EmptyData";
 import useSpinner from "@/hooks/useSpinner";
 import useConfirm from "@/hooks/useConfirm";
 import useMessage from "@/hooks/useMessage";
-import DailyTaskNewEditForm from "../../new-edit/DailyTaskNewEditForm";
+import ProjectTaskNewEditForm from "../../new-edit/ProjectTaskNewEditForm";
 import Modal from "@/components/Modal";
 import { apiDelete, apiPut } from "@/utils/axios";
+import { Link } from "react-router-dom";
+import { PATH_DASHBOARD } from "@/routes/path";
 
-export default function DailyTaskDataTable({
+export default function ProjectTaskDataTable({
   data = [],
   pagination,
   onChangePage,
@@ -28,12 +30,13 @@ export default function DailyTaskDataTable({
 
   projectId,
   projectName,
+  projectDailyTaskRefresh,
 }) {
 
   const [open, setOpen] = React.useState(false);
   const [task, setTask] = React.useState({});
   const { onOpen, onClose } = useSpinner();
-  const { showConfirm, showSaved } = useConfirm();
+  const { showConfirm, onCloseLoader } = useConfirm();
   const { onSuccess, onError } = useMessage();
   const isEdit = true;
 
@@ -59,7 +62,7 @@ export default function DailyTaskDataTable({
   }
 
   const triggerRemove = () => {
-    onClose();
+    onCloseLoader();
     onSuccess("Xóa thành công!")
   }
 
@@ -81,13 +84,12 @@ export default function DailyTaskDataTable({
 
   const remove = async (id) => {
     try {
-      onOpen();
       const response = await apiDelete(`/tasks/${id}`);
       onDeleteData(triggerRemove);
     } catch (error) {
       console.error(error);
       onError(error.message);
-      onClose();
+      onCloseLoader();
     }
   }
 
@@ -99,14 +101,16 @@ export default function DailyTaskDataTable({
       >
 
         <div className="project-task-header d-flex justify-between items-center mt-2">
-          <span className="text-capitalize d-flex fw-500 fs-18 items-center gap-6">
+          <span className=" txt-underline text-capitalize d-flex fw-500 fs-18 items-center gap-6">
             <RiTodoLine size={'19px'} />
-            <span className="text-too-long-280">
-              {row?.name}
-            </span>
+            <Link to={row?.url || '/404'} target='_blank' rel="noopener noreferrer">
+              <span className="text-too-long-280">
+                {row?.name}
+              </span>
+            </Link>
           </span>
 
-          <div className="d-flex gap-3 items-center">
+          <div className="d-flex items-center">
             <Star
               onClick={() => handleOrderStar(row?.id, row?.order_star)}
               className="select-none task-icon"
@@ -118,7 +122,8 @@ export default function DailyTaskDataTable({
               align='end'
               footerDelete
               trigger={
-                <Ellipsis size={'16px'}
+                <Ellipsis
+                  color="#9A9A9A"
                   className="select-none task-icon"
                 />
               }
@@ -134,21 +139,22 @@ export default function DailyTaskDataTable({
                 {
                   title: (
                     <MoreItem
-                      title={row?.status ? 'Hiển thị' : 'Ẩn'}
-                      icon={<ToggleRight size={'18px'} />}
+                      title={row?.status === StatusCommon.IN_ACTIVE ? 'Vô hiệu hóa' : 'Kích hoạt'}
+                      icon={row?.status === StatusCommon.IN_ACTIVE ? <ToggleLeft size={'18px'} /> : <ToggleRight size={'18px'} />}
                     />
                   ),
                   // onClick: () => handleDelete(row.id, row.name)
                 },
-                row?.script_name && {
+                {
                   title: (
                     <MoreItem
-                      title={row?.script_name}
+                      title={row?.script_name || 'Tạo script'}
                       icon={<FileSymlink size={'17px'} />}
+                      path={row?.script_name ? PATH_DASHBOARD.script.edit(row?.script_name) : PATH_DASHBOARD.script.create}
                     />
                   ),
                 },
-              ].filter(Boolean)
+              ]
               }
               footer={
                 {
@@ -185,14 +191,15 @@ export default function DailyTaskDataTable({
             </BadgeWhite>
           }
 
-          {/* <Badge className='custom-badge bdr select-none' */}
+          {/* <Badge className='custom-badge bdr select-none gap-1' */}
           {/*   style={{ */}
-          {/*     backgroundColor: `${darkenColor(Color.PRIMARY)}`, */}
-          {/*     borderColor: `${lightenColor(Color.PRIMARY)}`, */}
+          {/*     backgroundColor: `${darkenColor(Color.SUCCESS)}`, */}
+          {/*     borderColor: `${lightenColor(Color.SUCCESS)}`, */}
           {/*     color: 'white', */}
           {/*   }} */}
           {/* > */}
-          {/*   UTC+0 */}
+          {/*   <CheckCheck size={17} /> */}
+          {/*   Done */}
           {/* </Badge> */}
           {/* <Badge className='custom-badge bdr select-none' */}
           {/*   style={{ */}
@@ -228,20 +235,25 @@ export default function DailyTaskDataTable({
           />
         </div>
 
-        <div className="project-task-footer d-flex justify-between items-center mt-15">
-          <div className='d-flex items-center gap-3'>
-
-            <div className='d-flex items-center gap-1.5 mb-2'>
-              {/* <Clock size={"15px"} /> */}
-              <ClipboardClock size={"16px"} />
-              <span className="d-flex">
-                {'UTC+0'}
-              </span>
-            </div>
-          </div>
+        <div className="project-task-footer d-flex justify-between mb-3 items-center mt-15">
+          <Badge className='custom-badge bdr select-none'
+            style={{
+              backgroundColor: `${darkenColor(projectDailyTaskRefresh === DailyTaskRefresh.COUNT_DOWN_TIME_IT_UP ? Color.WARNING : projectDailyTaskRefresh === DailyTaskRefresh.UTC0 ? Color.PRIMARY : Color.SECONDARY)}`,
+              borderColor: `${lightenColor(projectDailyTaskRefresh === DailyTaskRefresh.COUNT_DOWN_TIME_IT_UP ? Color.WARNING : projectDailyTaskRefresh === DailyTaskRefresh.UTC0 ? Color.PRIMARY : Color.SECONDARY)}`,
+              color: 'white',
+            }}
+          >
+            <span className="d-flex gap-1">
+              <ClipboardClock size={"14px"} className='mt-1' />
+              {`10'`}
+            </span>
+          </Badge>
 
           <div className="d-flex">
-            <GrSchedulePlay className='select-none pointer task-icon-footer' size={'21.5px'} />
+            <ButtonInfo
+              className='button-primary color-white select-none font-inter pointer h-31 fs-13 d-flex'
+              icon={<GrSchedulePlay />}
+            />
           </div>
         </div>
 
@@ -272,9 +284,9 @@ export default function DailyTaskDataTable({
         onClose={handleClose}
         title={"Cập nhật task hằng ngày"}
         content={
-          <DailyTaskNewEditForm
+          <ProjectTaskNewEditForm
             onCloseModal={handleClose}
-            currentDailyTask={task}
+            currentTask={task}
             isEdit={isEdit}
             onUpdateData={onUpdateData}
             projectName={projectName}
@@ -286,11 +298,24 @@ export default function DailyTaskDataTable({
   )
 }
 
-const MoreItem = ({ title, icon }) => {
+const MoreItem = ({ title, icon, path }) => {
+  if (path) {
+    return (
+      <Link to={path}
+        style={{ width: '100%' }}
+        className='fw-400 font-inter fs-13 d-flex justify-content-between gap-20'>
+        <span className="text-too-long-180">
+          {title}
+        </span>
+        {icon}
+      </Link>
+    )
+  }
+
   return (
     <div
       style={{ width: '100%' }}
-      className='fw-400 fs-13 d-flex justify-content-between gap-20'>
+      className='fw-400 font-inter fs-13 d-flex justify-content-between gap-20'>
       <span className="text-too-long-180">
         {title}
       </span>

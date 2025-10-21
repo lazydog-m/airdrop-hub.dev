@@ -14,6 +14,7 @@ import useMessage from '@/hooks/useMessage';
 import useTable from '@/hooks/useTable';
 import { delayApi } from '@/utils/commonUtil';
 import useSocket from '@/hooks/useSocket';
+import { StatusCommon } from '@/enums/enum';
 
 const ProfileDataTableMemo = React.memo(ProfileDataTable);
 
@@ -27,7 +28,7 @@ export default function ProfileList() {
   const [loadingIds, setLoadingIds] = React.useState(new Set());
   const socket = useSocket();
 
-  const [selectedStatusItems, setSelectedStatusItems] = useState(['']);
+  const [selectedStatusItems, setSelectedStatusItems] = useState([StatusCommon.IN_ACTIVE]);
   const [search, setSearch] = useState('');
 
   const {
@@ -43,17 +44,23 @@ export default function ProfileList() {
     const params = {
       page,
       search,
+      selectedStatusItems,
     }
 
     try {
-      onOpen();
+      if (!dataTrigger) {
+        onOpen();
+      }
+
       const response = await apiGet("/profiles", params);
 
       if (dataTrigger) {
-        setData(response.data.data.data || []);
-        setPagination(response.data.data.pagination || {});
-        setOpenningIds(new Set(response.data.data.browsers));
-        onTrigger();
+        delayApi(() => {
+          setData(response.data.data.data || []);
+          setPagination(response.data.data.pagination || {});
+          setOpenningIds(new Set(response.data.data.browsers));
+          onTrigger();
+        })
       }
       else {
         delayApi(() => {
@@ -81,7 +88,7 @@ export default function ProfileList() {
 
   const handleUpdateData = useCallback((onTrigger = () => { }) => {
     fetchApi(true, onTrigger)
-  }, [search, page]);
+  }, [search, page, selectedStatusItems]);
 
   const handleDeleteData = useCallback((id, onTrigger = () => { }) => {
     fetchApi(true, () => {
@@ -89,7 +96,7 @@ export default function ProfileList() {
       setSelected(newSelected);
       onTrigger();
     })
-  }, [search, page, selected]);
+  }, [search, page, selectedStatusItems, selected]);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -166,7 +173,7 @@ export default function ProfileList() {
 
   useEffect(() => {
     fetchApi();
-  }, [search, page])
+  }, [search, page, selectedStatusItems])
 
   useEffect(() => {
     socket.on('profileIdClosed', (data) => {
@@ -194,15 +201,20 @@ export default function ProfileList() {
         />
 
         <ProfileFilterSearch
-          // selectedStatusItems={selectedStatusItems}
-          // onChangeSelectedStatusItems={handleChangeSelectedStatusItems}
-          // onClearSelectedStatusItems={() => setSelectedStatusItems([])}
+          selectedStatusItems={selectedStatusItems}
+          onChangeSelectedStatusItems={handleChangeSelectedStatusItems}
+          onClearSelectedStatusItems={() => setSelectedStatusItems([])}
+
           onClearAllSelectedItems={handleClearAllSelectedItems}
+
           search={search}
           onChangeSearch={handleChangeSearch}
+
           selected={selected}
+
           onAddOpenningIds={handleAddOpenningIds}
           onRemoveOpenningIds={handleRemoveOpenningIds}
+
           loadingIds={loadingIds}
           openningIds={openningIds}
         />
@@ -229,6 +241,8 @@ export default function ProfileList() {
         />
 
         <Modal
+          width={'1400px'}
+          size='xl'
           isOpen={open}
           onClose={handleClose}
           title={"Thêm mới profile"}

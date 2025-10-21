@@ -87,13 +87,37 @@ export const convertProjectTaskItemsToColorHex = (other) => {
 
 }
 
+export const convertStatusCommonEnumToText = (status) => {
+
+  switch (status) {
+    case StatusCommon.IN_ACTIVE:
+      return 'Đang hoạt động'
+    case StatusCommon.UN_ACTIVE:
+      return 'Ngừng Hoạt Động'
+    default: return null
+  }
+
+}
+
+export const convertStatusCommonEnumToColorHex = (status) => {
+
+  switch (status) {
+    case StatusCommon.IN_ACTIVE:
+      return Color.PRIMARY
+    case StatusCommon.UN_ACTIVE:
+      return Color.ORANGE
+    default: return null
+  }
+
+}
+
 export const convertWalletStatusEnumToText = (status) => {
 
   switch (status) {
     case StatusCommon.IN_ACTIVE:
-      return 'Kích hoạt'
+      return 'Đang hoạt động'
     case StatusCommon.UN_ACTIVE:
-      return 'Vô hiệu hóa'
+      return 'Ngừng Hoạt Động'
     default: return null
   }
 

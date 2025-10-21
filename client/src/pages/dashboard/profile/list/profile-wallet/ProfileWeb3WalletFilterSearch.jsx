@@ -8,7 +8,7 @@ import { Color, WalletStatus } from '@/enums/enum';
 import { Badge } from '@/components/ui/badge';
 import useDebounce from '@/hooks/useDebounce';
 
-export default function ProfileWalletFilterSearch({
+export default function ProfileWeb3WalletFilterSearch({
   selectedStatusItems,
   onChangeSelectedStatusItems,
   onClearSelectedStatusItems,
