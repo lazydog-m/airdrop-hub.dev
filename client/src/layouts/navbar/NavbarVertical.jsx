@@ -207,7 +207,7 @@ const ICONS = {
   script: <CirclePlay size={18} />,
   extension: <Puzzle size={18} />,
   trash: <Trash2 size={18} style={{ marginTop: '-3px' }} />,
-  web3_wallet: <Rabbit size={18} />,
+  web3_wallet: <Panda size={18} />,
 }
 
 const labelStyle = {

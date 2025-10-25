@@ -2,11 +2,12 @@ const NotFoundException = require('../exceptions/NotFoundException');
 const ValidationException = require('../exceptions/ValidationException');
 const Joi = require('joi');
 const RestApiException = require('../exceptions/RestApiException');
-const { TaskStatus, StatusCommon } = require('../enums');
+const { TaskStatus, StatusCommon, TaskType } = require('../enums');
 const { Op, Sequelize } = require('sequelize');
 const sequelize = require('../configs/dbConnection');
 const Task = require('../models/task');
 const { convertBitToBoolean } = require('../utils/convertUtil');
+const { getProjectById } = require('./projectService');
 
 const taskSchema = Joi.object({
   name: Joi.string().trim().required().max(255).messages({
@@ -66,20 +67,19 @@ const taskSchema = Joi.object({
   //   'date.format': 'Ngày hết hạn phải có định dạng YYYY-MM-DD!',
   //   'any.required': 'Ngày hết hạn không được bỏ trống!',
   // }),
-  // status: Joi.required()
-  //   .valid(TaskStatus.TO_DO, TaskStatus.COMPLETED, TaskStatus.TO_REVIEW, TaskStatus.IN_PROGRESS)
-  //   .messages({
-  //     'any.only': 'Trạng thái công việc không hợp lệ!',
-  //     'string.empty': 'Trạng thái công việc không được bỏ trống!',
-  //     'any.required': 'Trạng thái công việc không được bỏ trống!',
-  //   }),
-});
-
-const taskOrderValidation = Joi.object({
-  order: Joi.number().required().messages({
-    'number.base': 'Thứ tự công việc phải là một số!',
-    'any.required': 'Thứ tự công việc không được bỏ trống!',
-  }),
+  type: Joi.required()
+    .valid(
+      TaskType.REG,
+      TaskType.LOGIN,
+      TaskType.DAILY,
+      TaskType.POINTS,
+      TaskType.OFF_CHAIN,
+      TaskType.AIRDROP,
+    )
+    .messages({
+      'any.only': 'Loại task không hợp lệ!',
+      'any.required': 'Loại task không được bỏ trống!',
+    }),
 });
 
 const taskStatusValidation = Joi.object({
@@ -87,14 +87,16 @@ const taskStatusValidation = Joi.object({
     .valid(TaskStatus.TO_DO, TaskStatus.COMPLETED, TaskStatus.TO_REVIEW, TaskStatus.IN_PROGRESS)
     .messages({
       'any.only': 'Trạng thái công việc không hợp lệ!',
-      'string.empty': 'Trạng thái công việc không được bỏ trống!',
       'any.required': 'Trạng thái công việc không được bỏ trống!',
     }),
 });
 
 const getAllTasksByProjectId = async (req) => {
-  const { page, search, selectedStatus } = req.query;
+  const { page, search, selectedTab } = req.query;
   const { projectId } = req.params;
+
+  await getProjectById(projectId);
+  console.log(await getProjectById(projectId) || '?')
 
   const currentPage = Number(page) || 1;
   const offset = (currentPage - 1) * 6;
@@ -197,30 +199,6 @@ const createTask = async (body) => {
   return createdTask;
 }
 
-// const createTask = async (body) => {
-//   const data = validateTask(body);
-//
-//   const tasks = await Task.findAll({
-//     order: [['order', 'ASC']],
-//   });
-//
-//   const updatedOrders = tasks.map(task => ({
-//     id: task.id,
-//     order: task.order + 1,
-//   }));
-//
-//   await Promise.all(updatedOrders.map(task =>
-//     Task.update({ order: task.order }, { where: { id: task.id } })
-//   ));
-//
-//   const createdTask = await Task.create({
-//     ...data,
-//     order: 0,
-//   });
-//
-//   return createdTask;
-// }
-
 const updateTask = async (body) => {
   const { id } = body;
   const data = validateTask(body);
@@ -255,34 +233,12 @@ const updateTask = async (body) => {
   return updatedTask;
 }
 
-// const updateTaskOrder = async (body) => {
-//   const { orderedPayload } = body;
-//
-//   if (!Array.isArray(orderedPayload)) {
-//     throw new RestApiException('orderedPayload phải là mảng');
-//   }
-//
-//   validateTaskOrder(orderedPayload);
-//
-//   const updatePromises = orderedPayload.map(({ id, order }) =>
-//     Task.update(
-//       { order: order },
-//       { where: { id } }
-//     )
-//   );
-//
-//   const results = await Promise.all(updatePromises);
-//
-//   return results; // response này bên fe ko sử dụng, là 1 mảng các count update
-// }
-
 const updateTaskStatus = async (body) => {
   const { id, status } = body;
   validateTaskStatus(body);
 
   const [updatedCount] = await Task.update({
     status: status,
-    // end_date: status === ProjectStatus.END_AIRDROP ? Sequelize.fn('NOW') : null,
   }, {
     where: {
       id: id,
@@ -353,23 +309,6 @@ const validateTaskStatus = (data) => {
   }
 
   return value;
-};
-
-const validateTaskOrder = (payload) => {
-
-  if (!Array.isArray(payload)) {
-    throw new Error('orderedPayload phải là mảng');
-  }
-
-  for (const item of payload) {
-    const { error, value } = taskOrderValidation.validate(item, { stripUnknown: true });
-    if (error) {
-      throw new ValidationException(error.details[0].message);
-    }
-
-    return value;
-  }
-
 };
 
 module.exports = {

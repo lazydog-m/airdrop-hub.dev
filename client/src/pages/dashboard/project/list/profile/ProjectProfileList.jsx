@@ -23,7 +23,6 @@ export default function ProjectProfileList({ project = {} }) {
   const { onSuccess, onError } = useMessage();
 
   const [search, setSearch] = useState('');
-  // const [selectedStatusItems, setSelectedStatusItems] = useState([StatusCommon.IN_ACTIVE]);
   const [selectedTab, setSelectedTab] = useState('joined');
 
   const isTabFree = selectedTab === 'free';
@@ -42,6 +41,7 @@ export default function ProjectProfileList({ project = {} }) {
       page,
       search,
       resources: project?.resources || [],
+      selectedTab,
     }
 
     try {
@@ -115,9 +115,13 @@ export default function ProjectProfileList({ project = {} }) {
   const handleSelectAllData = React.useCallback(() => {
 
     const idsByProject = async () => {
+      const params = {
+        selectedTab,
+      }
+
       try {
         onOpen();
-        const response = await apiGet(`/project-profiles/ids/${project?.id}`);
+        const response = await apiGet(`/project-profiles/ids/${project?.id}`, params);
         console.log(response.data.data)
 
         delayApi(() => {
@@ -226,18 +230,22 @@ export default function ProjectProfileList({ project = {} }) {
     onSelectRow(id);
   }, [selected])
 
-  const handleUpdateData = useCallback((id, onTrigger = () => { }) => {
+  const handleUpdateData = useCallback((id, onTrigger = () => { }, isUpdateSelected = true) => {
     if (isTabFree) {
       fetchApiByResources(true, () => {
-        const newSelected = selected.filter(selected => selected !== id);
-        setSelected(newSelected);
+        if (isUpdateSelected) {
+          const newSelected = selected.filter(selected => selected !== id);
+          setSelected(newSelected);
+        }
         onTrigger();
       })
     }
     else {
       fetchApiByProject(true, () => {
-        const newSelected = selected.filter(selected => selected !== id);
-        setSelected(newSelected);
+        if (isUpdateSelected) {
+          const newSelected = selected.filter(selected => selected !== id);
+          setSelected(newSelected);
+        }
         onTrigger();
       })
     }
@@ -292,17 +300,6 @@ export default function ProjectProfileList({ project = {} }) {
     onChangePage(1);
     setSelected([]);
   };
-
-  // const handleChangeSelectedStatusItems = (label, isChecked) => {
-  //   setSelectedStatusItems((prev) => {
-  //     if (isChecked) {
-  //       return [...prev, label];
-  //     } else {
-  //       return prev.filter((item) => item !== label);
-  //     }
-  //   });
-  //   onChangePage(1);
-  // };
 
   const handleClearAllSelectedItems = () => {
     setSearch('');

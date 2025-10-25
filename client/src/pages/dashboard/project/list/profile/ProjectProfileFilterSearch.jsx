@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
-import { ListFilter, UserPlus, UserRoundCheck, UserRoundX } from 'lucide-react';
+import { ListFilter, UserLock, UserRoundCheck, UserRoundMinus, UserRoundSearch, UserRoundX } from 'lucide-react';
 import { ButtonGhost } from '@/components/Button';
 import { Color } from '@/enums/enum';
 import useDebounce from '@/hooks/useDebounce';
-import TabsUi from '@/components/TabsUi';
-import { ResourceIcon, RESOURCES } from '@/commons/Resources';
-import { IconX } from '@/components/IconUi';
+import { TabsUi } from '@/components/TabsUi';
 import TooltipUi from '@/components/TooltipUi';
-import { BadgePrimaryOutline } from '@/components/Badge';
+import InputUi from '@/components/InputUi';
+import { LiaUserLockSolid } from "react-icons/lia";
 
 export default function ProjectProfileFilterSearch({
   selectedTab,
@@ -47,53 +46,58 @@ export default function ProjectProfileFilterSearch({
 
   const tabs = [
     {
-      name: `Đã tham gia (${pagination?.totalItemsJoined || 0})`,
+      name: `Đã tham gia`,
       value: "joined",
+      total: pagination?.totalItemsJoined || 0,
       icon: <UserRoundCheck size={17} />
     },
     {
-      name: `Chưa tham gia (${pagination?.totalItemsFree || 0})`,
+      name: `Chưa tham gia`,
       value: "free",
+      total: pagination?.totalItemsFree || 0,
+      icon: <UserRoundMinus size={17} />
+    },
+    {
+      name: `Ngừng hoạt động`,
+      value: "un_active",
+      total: pagination?.totalItemsJoinedDisabled || 0,
       icon: <UserRoundX size={17} />
     },
   ];
 
   return (
     <>
-      <div className="d-flex justify-content-between items-center">
+      <div className="d-flex justify-content-between items-center mt-2">
         <div className="d-flex gap-10 items-center">
           <TabsUi
             tabs={tabs}
             selectedTab={filterTab}
             onChangeTab={(value) => setFilterTab(value)}
           />
-        </div>
-        <div className='d-flex items-center gap-10'>
-          {search &&
-            <ButtonGhost
-              icon={<ListFilter color={Color.ORANGE} />}
-              onClick={clearAll}
-            />
-          }
-          <Input
+          <InputUi
             placeholder='Tìm kiếm profiles ...'
             style={{ width: '250px' }}
             className='custom-input'
             value={filterSearch}
             onChange={(event) => setFilterSearch(event.target.value)}
           />
-          <TooltipUi
-            modal
-            content={`Total Points ${projectName}`}
+          {search &&
+            <ButtonGhost
+              icon={<ListFilter color={Color.ORANGE} />}
+              onClick={clearAll}
+            />
+          }
+        </div>
+        <div className='d-flex items-center gap-10'>
+          <div
+            className='me-2
+                items-center border-none inline-flex select-none gap-0 h-40 bg-color-light pdi-15 border-primary-2
+                '
           >
-            <div
-              className='items-center inline-flex select-none gap-0 h-40 border-primary bg-color-light pdi-15'
-            >
-              <span className='fs-13 fw-500 flex items-center'>
-                {`100,000 Points`}
-              </span>
+            <div className='fs-13 fw-500 flex items-center'>
+              {`${projectName} 100,000 Points`}
             </div>
-          </TooltipUi>
+          </div>
           {action}
         </div>
       </div>

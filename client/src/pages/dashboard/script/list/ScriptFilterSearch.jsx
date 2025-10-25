@@ -8,6 +8,7 @@ import { Color, WalletStatus } from '@/enums/enum';
 import { Badge } from '@/components/ui/badge';
 import { darkenColor, lightenColor } from '@/utils/convertUtil';
 import useDebounce from '@/hooks/useDebounce';
+import InputUi from '@/components/InputUi';
 
 export default function ScriptFilterSearch({
   selectedStatusItems,
@@ -34,7 +35,7 @@ export default function ScriptFilterSearch({
   return (
     <div className="d-flex mt-20 justify-content-between align-items-center">
       <div className="filter-search d-flex gap-10">
-        <Input
+        <InputUi
           placeholder='Tìm kiếm scripts ...'
           style={{ width: '250px' }}
           className='custom-input'

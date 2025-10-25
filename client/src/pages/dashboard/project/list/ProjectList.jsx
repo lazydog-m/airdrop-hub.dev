@@ -23,7 +23,7 @@ export default function ProjectList() {
   const [pagination, setPagination] = useState({});
   const { onOpen, onClose } = useSpinner();
   const { onError } = useMessage();
-  const sortDate = 'Ngày Làm DESC';
+  const sortDate = 'Ngày Làm (by Desc)';
 
   const [search, setSearch] = useState('');
   const [selectedStatusItems, setSelectedStatusItems] = useState([ProjectStatus.DOING]);

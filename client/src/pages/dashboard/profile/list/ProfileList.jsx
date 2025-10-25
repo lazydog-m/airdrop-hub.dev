@@ -29,6 +29,7 @@ export default function ProfileList() {
   const socket = useSocket();
 
   const [selectedStatusItems, setSelectedStatusItems] = useState([StatusCommon.IN_ACTIVE]);
+  const [selectedResourceItems, setSelectedResourceItems] = useState([]);
   const [search, setSearch] = useState('');
 
   const {
@@ -45,6 +46,7 @@ export default function ProfileList() {
       page,
       search,
       selectedStatusItems,
+      selectedResourceItems,
     }
 
     try {
@@ -88,7 +90,7 @@ export default function ProfileList() {
 
   const handleUpdateData = useCallback((onTrigger = () => { }) => {
     fetchApi(true, onTrigger)
-  }, [search, page, selectedStatusItems]);
+  }, [search, page, selectedStatusItems, selectedResourceItems]);
 
   const handleDeleteData = useCallback((id, onTrigger = () => { }) => {
     fetchApi(true, () => {
@@ -96,7 +98,7 @@ export default function ProfileList() {
       setSelected(newSelected);
       onTrigger();
     })
-  }, [search, page, selectedStatusItems, selected]);
+  }, [search, page, selectedStatusItems, selectedResourceItems, selected]);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -122,8 +124,20 @@ export default function ProfileList() {
     onChangePage(1);
   };
 
+  const handleChangeSelectedResourceItems = (res) => {
+    setSelectedResourceItems((prev) => {
+      if (!prev.includes(res)) {
+        return [...prev, res];
+      } else {
+        return prev.filter((item) => item !== res);
+      }
+    });
+    onChangePage(1);
+  };
+
   const handleClearAllSelectedItems = () => {
     setSelectedStatusItems([]);
+    setSelectedResourceItems([]);
     setSearch('');
     onChangePage(1);
   }
@@ -173,7 +187,7 @@ export default function ProfileList() {
 
   useEffect(() => {
     fetchApi();
-  }, [search, page, selectedStatusItems])
+  }, [search, page, selectedStatusItems, selectedResourceItems])
 
   useEffect(() => {
     socket.on('profileIdClosed', (data) => {
@@ -204,6 +218,10 @@ export default function ProfileList() {
           selectedStatusItems={selectedStatusItems}
           onChangeSelectedStatusItems={handleChangeSelectedStatusItems}
           onClearSelectedStatusItems={() => setSelectedStatusItems([])}
+
+          selectedResourceItems={selectedResourceItems}
+          onChangeSelectedResourceItems={handleChangeSelectedResourceItems}
+          onClearSelectedResourceItems={() => setSelectedResourceItems([])}
 
           onClearAllSelectedItems={handleClearAllSelectedItems}
 

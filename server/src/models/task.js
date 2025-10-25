@@ -29,8 +29,12 @@ const Task = db.define('tasks', {
   type: {
     type: DataTypes.ENUM,
     values: [
+      TaskType.REG,
+      TaskType.LOGIN,
       TaskType.DAILY,
-      TaskType.SIGN,
+      TaskType.POINTS,
+      TaskType.OFF_CHAIN,
+      TaskType.AIRDROP,
     ],
     defaultValue: TaskType.DAILY,
   },

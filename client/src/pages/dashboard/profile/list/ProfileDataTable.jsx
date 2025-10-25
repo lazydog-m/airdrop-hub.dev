@@ -2,7 +2,7 @@ import * as React from 'react';
 import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 import DataTable from '@/components/DataTable';
-import { ButtonIcon, ButtonOutlinePrimary, ButtonPrimary } from '@/components/Button';
+import { ButtonIcon, ButtonInfo, ButtonOrange, ButtonOutlinePrimary, ButtonPrimary } from '@/components/Button';
 import { Chrome, Loader, PencilLine, Trash2 } from 'lucide-react';
 import { Color, StatusCommon } from '@/enums/enum';
 import Modal from '@/components/Modal';
@@ -312,7 +312,7 @@ export default function ProfileDataTable({
               />
             </div>
             {openningIds.has(row.id) ?
-              <ButtonOutlinePrimary
+              <ButtonOrange
                 onClick={() => handleCloseProfile(row.id)}
                 style={{
                   // width: '80px',
@@ -324,7 +324,7 @@ export default function ProfileDataTable({
                 title='Close'
               />
               :
-              <ButtonPrimary
+              <ButtonInfo
                 onClick={() => handleOpenProfile(row.id)}
                 style={{
                   // width: '60px',

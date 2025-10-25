@@ -112,7 +112,7 @@ export const ButtonGhost = ({ icon, title, isReverse, ...other }) => {
   )
 }
 
-export const ButtonOutlineTags = ({ icon, title, selected = [], tags, showTagOne = false, ...other }) => {
+export const ButtonOutlineTags = ({ icon, title, selected = [], tags, showTagOne = false, showTagZero = false, ...other }) => {
   return (
     <Button {...other}>
 
@@ -135,15 +135,10 @@ export const ButtonOutlineTags = ({ icon, title, selected = [], tags, showTagOne
           : null
       }
 
-      {(selected.length > 0 && selected.length < 2 && showTagOne) ?
+      {selected.length > 0 && showTagOne &&
         <div className="d-flex align-items-center gap-1 ps-8">
-          {tags}
+          <Badge className='font-inter bdr fw-400 fs-12 bg-color' style={{ borderColor: lightenColor('#606060', 0.05), color: 'white' }}>{`${selected.length} lựa chọn`}</Badge>
         </div>
-        : selected.length > 1 && showTagOne ?
-          <div className="d-flex align-items-center gap-1 ps-8">
-            <Badge className='font-inter bdr fw-400 fs-12 bg-color' style={{ borderColor: lightenColor('#606060', 0.05), color: 'white' }}>{`${selected.length} lựa chọn`}</Badge>
-          </div>
-          : null
       }
 
     </Button>

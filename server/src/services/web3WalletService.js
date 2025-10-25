@@ -6,6 +6,7 @@ const Web3Wallet = require('../models/web3Wallet');
 const { Pagination, StatusCommon } = require('../enums');
 const RestApiException = require('../exceptions/RestApiException');
 const sequelize = require('../configs/dbConnection');
+const { convertArr } = require('../utils/convertUtil');
 
 const web3WalletSchema = Joi.object({
   name: Joi.string().trim().required().max(50).messages({
@@ -67,6 +68,8 @@ const getAllWeb3WalletsNoPage = async (req) => {
 const getAllWeb3Wallets = async (req) => {
   const { selectedStatusItems, page, search } = req.query;
 
+  const statusArr = convertArr(selectedStatusItems);
+
   const currentPage = Number(page) || 1;
   const offset = (currentPage - 1) * Pagination.limit;
 
@@ -79,10 +82,10 @@ const getAllWeb3Wallets = async (req) => {
     replacements.push(`%${search}%`);
   }
 
-  if (selectedStatusItems?.length > 0) {
-    const statusPlaceholders = selectedStatusItems.map((_, index) => `?`).join(',');
+  if (statusArr?.length > 0) {
+    const statusPlaceholders = statusArr.map((_, index) => `?`).join(',');
     conditions.push(`w.status IN (${statusPlaceholders})`);
-    replacements.push(...selectedStatusItems);
+    replacements.push(...statusArr);
   }
 
   if (conditions.length > 0) {

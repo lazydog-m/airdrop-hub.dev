@@ -7,6 +7,7 @@ const { ProjectType, ProjectStatus, DailyTaskRefresh, Pagination } = require('..
 const { Op, Sequelize } = require('sequelize');
 const sequelize = require('../configs/dbConnection');
 const DailyTaskCompleted = require('../models/daily_task_completed');
+const { convertArr } = require('../utils/convertUtil');
 
 const projectSchema = Joi.object({
   name: Joi.string().trim().required().max(50).messages({
@@ -78,6 +79,10 @@ const getAllProjects = async (req) => {
     search
   } = req.query;
 
+  const statusArr = convertArr(selectedStatusItems);
+  const typeArr = convertArr(selectedTypeItems);
+  const taskArr = convertArr(selectedTaskItems);
+
   const currentPage = Number(page) || 1;
   const offset = (currentPage - 1) * Pagination.limit;
 
@@ -91,16 +96,16 @@ const getAllProjects = async (req) => {
     replacements.push(`%${search}%`);
   }
 
-  if (selectedStatusItems?.length > 0) {
-    const statusPlaceholders = selectedStatusItems.map((_, index) => `?`).join(',');
+  if (statusArr?.length > 0) {
+    const statusPlaceholders = statusArr.map((_, index) => `?`).join(',');
     conditions.push(`p.status IN (${statusPlaceholders})`);
-    replacements.push(...selectedStatusItems);
+    replacements.push(...statusArr);
   }
 
-  if (selectedTypeItems?.length > 0) {
-    const typePlaceholders = selectedTypeItems.map((_, index) => `?`).join(',');
+  if (typeArr?.length > 0) {
+    const typePlaceholders = typeArr.map((_, index) => `?`).join(',');
     conditions.push(`p.type IN (${typePlaceholders})`);
-    replacements.push(...selectedTypeItems);
+    replacements.push(...typeArr);
   }
 
   if (selectedTask === 'Task hằng ngày') {
@@ -117,37 +122,36 @@ const getAllProjects = async (req) => {
   //   replacements.push(...selectedCostItems);
   // }
 
-  // 7h sang ?? 
-
-  if (selectedSortDate === 'Ngày Làm DESC') {
+  if (selectedSortDate === 'Ngày Làm (by Desc)') {
     orderByClause = 'ORDER BY p.createdAt DESC';
-  } else if (selectedSortDate === 'Ngày End DESC') {
+  } else if (selectedSortDate === 'Ngày End (by Desc)') {
     orderByClause = 'ORDER BY p.end_date DESC';
-  } else if (selectedSortDate === 'Ngày Làm ASC') {
+  } else if (selectedSortDate === 'Ngày Làm (by Asc)') {
     orderByClause = 'ORDER BY p.createdAt ASC';
-  } else if (selectedSortDate === 'Ngày End ASC') {
+  } else if (selectedSortDate === 'Ngày End (by Asc)') {
     orderByClause = 'ORDER BY p.end_date ASC';
   }
   else {
     orderByClause = 'ORDER BY p.createdAt DESC';
   }
 
-  if (selectedTaskItems?.length > 0) {
-    // if (selectedOtherItems.includes('Cheat')) {
-    //   conditions.push(`p.is_cheat = true`);
-    // }
+  if (taskArr?.length > 0) {
+    const time = [];
 
-    if (selectedTaskItems.includes('Refresh 00:00 UTC')) {
-      conditions.push(`p.daily_tasks_refresh IN (?)`);
-      const time = [DailyTaskRefresh.UTC0];
+    if (taskArr.includes('UTC+0')) time.push(DailyTaskRefresh.UTC0);
+    if (taskArr.includes('CD-24')) time.push(DailyTaskRefresh.COUNT_DOWN_TIME_IT_UP);
+
+    if (time.length > 0) {
+      const timePlaceholders = time.map((_, index) => `?`).join(',');
+      conditions.push(`p.daily_tasks_refresh IN (${timePlaceholders})`);
       replacements.push(...time);
     }
 
-    if (selectedTaskItems.includes('Chưa Hoàn Thành')) {
-      const status = [ProjectStatus.DOING];
-      conditions.push(`dtc.max_id IS NULL`);
-      replacements.push(...status);
-    }
+    // if (taskArr.includes('Chưa Hoàn Thành')) {
+    //   const status = [ProjectStatus.DOING];
+    //   conditions.push(`dtc.max_id IS NULL`);
+    //   replacements.push(...status);
+    // }
   }
 
   if (conditions.length > 0) {

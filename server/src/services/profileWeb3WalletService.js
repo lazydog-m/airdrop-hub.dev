@@ -6,6 +6,8 @@ const { Sequelize } = require('sequelize');
 const ProfileWeb3Wallet = require('../models/profileWeb3Wallet');
 const sequelize = require('../configs/dbConnection');
 const { Pagination, StatusCommon } = require('../enums');
+const { getProfileById } = require('./profileService');
+const { getWeb3WalletById } = require('./web3WalletService');
 
 const profileWeb3WalletSchema = Joi.object({
   wallet_address: Joi.string().trim().required().max(1000).messages({
@@ -43,6 +45,8 @@ const getAllWeb3WalletsByProfileId = async (req) => {
 
   const currentPage = Number(page) || 1;
   const offset = (currentPage - 1) * Pagination.limit;
+
+  await getProfileById(profileId);
 
   const query = `
     SELECT 
@@ -108,6 +112,9 @@ const createProfileWeb3Wallet = async (body) => {
   } = body;
   const data = validateProfileWeb3Wallet(body);
 
+  await getProfileById(profile_id);
+  await getWeb3WalletById(wallet_id);
+
   const profileWeb3WalletExists = await sequelize.query(queryProfileWeb3WalletExists, {
     replacements: { profileId: profile_id, walletId: wallet_id }
   });
@@ -129,19 +136,22 @@ const updateProfileWeb3Wallet = async (body) => {
     profile_id,
     wallet_name,
     wallet_id,
-    need_check_wallet_id
   } = body;
   const data = validateProfileWeb3Wallet(body);
 
-  if (need_check_wallet_id) {
+  await getProfileById(profile_id);
+  await getWeb3WalletById(wallet_id);
 
-    const profileWeb3WalletExists = await sequelize.query(queryProfileWeb3WalletExists, {
-      replacements: { profileId: profile_id, walletId: wallet_id }
-    });
-
-    if (profileWeb3WalletExists[0].length > 0) {
-      throw new RestApiException(`Ví Web3 ${wallet_name} đã tồn tại trong hồ sơ này!`);
+  const profileWeb3WalletExists = await sequelize.query(queryProfileWeb3WalletExists, {
+    replacements: {
+      profileId: profile_id,
+      walletId: wallet_id,
+      id,
     }
+  });
+
+  if (profileWeb3WalletExists[0].length > 0) {
+    throw new RestApiException(`Ví Web3 ${wallet_name} đã tồn tại trong hồ sơ này!`);
   }
 
   const [updatedCount] = await ProfileWeb3Wallet.update({
@@ -192,6 +202,7 @@ const queryProfileWeb3WalletExists = `
   WHERE pw.profile_id = :profileId
   AND pw.wallet_id = :walletId
   AND pw.deletedAt IS NULL
+  AND pw.id != :id
   LIMIT 1;
 `;
 

@@ -139,7 +139,7 @@ export default function ProfileNewEditForm({ onCloseModal, isEdit, currentProfil
 
               <Col span={24}>
                 <RHFTextarea
-                  className='font-inter custom-input'
+                  mt=""
                   name='note'
                   placeholder='Ghi chú ...'
                   height="40px"
@@ -189,7 +189,7 @@ export default function ProfileNewEditForm({ onCloseModal, isEdit, currentProfil
               </Col>
               <Col span={24}>
                 <RHFTextarea
-                  className='font-inter custom-input'
+                  mt=""
                   name='note'
                   placeholder='Ghi chú ...'
                   height="40px"
@@ -236,7 +236,7 @@ export default function ProfileNewEditForm({ onCloseModal, isEdit, currentProfil
               </Col>
               <Col span={24}>
                 <RHFTextarea
-                  className='font-inter custom-input'
+                  mt=""
                   name='note'
                   placeholder='Ghi chú ...'
                   height="40px"
@@ -288,7 +288,7 @@ export default function ProfileNewEditForm({ onCloseModal, isEdit, currentProfil
               </Col>
               <Col span={24}>
                 <RHFTextarea
-                  className='font-inter custom-input'
+                  mt=""
                   name='note'
                   placeholder='Ghi chú ...'
                   height="40px"
@@ -297,16 +297,6 @@ export default function ProfileNewEditForm({ onCloseModal, isEdit, currentProfil
             </Row>
           </div>
         </Col>
-
-        {/* <Col span={24}> */}
-        {/*   <RHFTextarea */}
-        {/*     className='font-inter custom-input' */}
-        {/*     // label='Ghi chú' */}
-        {/*     name='note' */}
-        {/*     placeholder='Nhập ghi chú ...' */}
-        {/*   // height="20px" */}
-        {/*   /> */}
-        {/* </Col> */}
 
         <Col span={24} className='d-flex justify-content-end mb-5 mt-5 gap-10'>
           <ButtonOutline type='button' title={'Hủy'} onClick={onCloseModal} />

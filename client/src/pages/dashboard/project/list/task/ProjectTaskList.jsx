@@ -15,6 +15,9 @@ import { StatusCommon } from '@/enums/enum';
 const ProjectTaskDataTableMemo = React.memo(ProjectTaskDataTable);
 
 export default function ProjectTaskList({ project = {} }) {
+
+  const daily = project?.daily;
+
   const [open, setOpen] = useState(false); // modal
   const [data, setData] = useState([]);
   const [pagination, setPagination] = useState({});
@@ -23,7 +26,8 @@ export default function ProjectTaskList({ project = {} }) {
 
   const [search, setSearch] = useState('');
   const [selectedStatusItems, setSelectedStatusItems] = useState([StatusCommon.IN_ACTIVE]);
-  const [selectedTab, setSelectedTab] = useState('all');
+  const [selectedStatusTab, setSelectedStatusTab] = useState('in_complete');
+  const [selectedTaskTab, setSelectedTaskTab] = useState(daily ? 'daily' : 'points');
 
   const {
     page,
@@ -34,7 +38,7 @@ export default function ProjectTaskList({ project = {} }) {
     const params = {
       page,
       search,
-      selectedTab,
+      selectedTab: selectedStatusTab,
       selectedStatusItems,
     }
 
@@ -74,7 +78,7 @@ export default function ProjectTaskList({ project = {} }) {
     search,
     page,
     selectedStatusItems,
-    selectedTab,
+    selectedStatusTab,
   ]);
 
   const handleDeleteData = useCallback((onTrigger = () => { }) => {
@@ -85,7 +89,7 @@ export default function ProjectTaskList({ project = {} }) {
     search,
     page,
     selectedStatusItems,
-    selectedTab,
+    selectedStatusTab,
   ]);
 
   const handleClickOpen = () => {
@@ -105,8 +109,13 @@ export default function ProjectTaskList({ project = {} }) {
     onChangePage(1);
   }
 
-  const handleChangeSelectedTab = (selected) => {
-    setSelectedTab(selected);
+  const handleChangeSelectedStatusTab = (selected) => {
+    setSelectedStatusTab(selected);
+    onChangePage(1);
+  };
+
+  const handleChangeSelectedTaskTab = (selected) => {
+    setSelectedTaskTab(selected);
     onChangePage(1);
   };
 
@@ -131,10 +140,10 @@ export default function ProjectTaskList({ project = {} }) {
     fetchApi();
   }, [
     search,
-    selectedTab,
     page,
     selectedStatusItems,
-    selectedTab,
+    selectedStatusTab,
+    selectedTaskTab,
   ])
 
   return (
@@ -147,14 +156,18 @@ export default function ProjectTaskList({ project = {} }) {
             onClick={handleClickOpen}
           />
         }
+        daily={daily}
 
         onClearAllSelectedItems={handleClearAllSelectedItems}
 
         search={search}
         onChangeSearch={handleChangeSearch}
 
-        onChangeSelectedTab={handleChangeSelectedTab}
-        selectedTab={selectedTab}
+        onChangeSelectedStatusTab={handleChangeSelectedStatusTab}
+        selectedStatusTab={selectedStatusTab}
+
+        onChangeSelectedTaskTab={handleChangeSelectedTaskTab}
+        selectedTaskTab={selectedTaskTab}
 
         selectedStatusItems={selectedStatusItems}
         onChangeSelectedStatusItems={handleChangeSelectedStatusItems}
@@ -171,6 +184,7 @@ export default function ProjectTaskList({ project = {} }) {
         projectName={project?.name}
         projectId={project?.id}
         projectDailyTaskRefresh={project?.daily_tasks_refresh}
+        daily={daily}
       />
 
       <Modal
@@ -183,6 +197,7 @@ export default function ProjectTaskList({ project = {} }) {
             projectId={project?.id}
             onCloseModal={handleClose}
             onUpdateData={handleUpdateData}
+            daily={daily}
           />
         }
       />

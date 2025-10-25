@@ -7,6 +7,7 @@ import { ButtonGhost, ButtonOutlineTags } from '@/components/Button';
 import { Color, WalletStatus } from '@/enums/enum';
 import { Badge } from '@/components/ui/badge';
 import useDebounce from '@/hooks/useDebounce';
+import InputUi from '@/components/InputUi';
 
 export default function ProfileWeb3WalletFilterSearch({
   selectedStatusItems,
@@ -32,9 +33,9 @@ export default function ProfileWeb3WalletFilterSearch({
   }
 
   return (
-    <div className="d-flex justify-content-between align-items-center">
+    <div className="d-flex justify-content-between align-items-center mt-2">
       <div className="filter-search d-flex gap-10">
-        <Input
+        <InputUi
           placeholder='Tìm kiếm ví web3 ...'
           style={{ width: '250px' }}
           className='custom-input'

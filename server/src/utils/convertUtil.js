@@ -19,8 +19,13 @@ const convertEmailToEmailUsername = (email) => {
   return username;
 }
 
+const convertArr = (arr = []) => {
+  return Array.isArray(arr) ? arr : []
+}
+
 module.exports = {
   convertToArray,
+  convertArr,
   convertBitToBoolean,
   convertEmailToEmailUsername
 }

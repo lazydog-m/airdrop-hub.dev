@@ -2,20 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { CirclePause, CirclePlay, CirclePlus, Grip, ListFilter, Pause, Play } from 'lucide-react';
 import Popover from "@/components/Popover";
-import { ButtonGhost, ButtonOutline, ButtonOutlinePrimary, ButtonOutlineTags, ButtonPrimary } from '@/components/Button';
+import { ButtonGhost, ButtonInfo, ButtonOrange, ButtonOutline, ButtonOutlinePrimary, ButtonOutlineTags, ButtonPrimary } from '@/components/Button';
 import { Color, StatusCommon } from '@/enums/enum';
 import { Badge } from '@/components/ui/badge';
 import useDebounce from '@/hooks/useDebounce';
 import useSpinner from '@/hooks/useSpinner';
 import { apiGet } from '@/utils/axios';
 import useMessage from '@/hooks/useMessage';
-import { convertStatusCommonEnumToColorHex, convertStatusCommonEnumToText, darkenColor, lightenColor } from '@/utils/convertUtil';
+import { convertResource, convertStatusCommonEnumToColorHex, convertStatusCommonEnumToText, darkenColor, lightenColor } from '@/utils/convertUtil';
 import { DropdownCheckboxMenu } from '@/components/Checkbox';
+import { RESOURCES } from '@/commons/Resources';
+import InputUi from '@/components/InputUi';
 
 export default function ProfileFilterSearch({
   selectedStatusItems,
   onChangeSelectedStatusItems,
   onClearSelectedStatusItems,
+
+  selectedResourceItems,
+  onChangeSelectedResourceItems,
+  onClearSelectedResourceItems,
 
   onClearAllSelectedItems,
 
@@ -119,9 +125,9 @@ export default function ProfileFilterSearch({
   }
 
   return (
-    <div className="mt-20 justify-content-between align-items-center">
+    <div className="mt-20 justify-content-between align-items-center flex">
       <div className="filter-search d-flex gap-10">
-        <Input
+        <InputUi
           placeholder='Tìm kiếm profiles ...'
           style={{ width: '250px' }}
           className='custom-input'
@@ -129,44 +135,35 @@ export default function ProfileFilterSearch({
           onChange={(event) => setFilterSearch(event.target.value)}
         />
 
-        {selected.length > 0 &&
-          <>
-            <ButtonPrimary
-              style={{
-                opacity: loadingIds.size > 0 ? '0.5' : '1',
-                pointerEvents: loadingIds.size > 0 ? 'none' : '',
-              }}
-              onClick={handleOpenProfiles}
-              icon={<Play />}
-              title={'Mở'}
-            />
-
-            <ButtonOutlinePrimary
-              style={{
-                opacity: loadingIds.size > 0 ? '0.5' : '1',
-                pointerEvents: loadingIds.size > 0 ? 'none' : '',
-              }}
-              onClick={handleCloseProfiles}
-              icon={<Pause />}
-              title={'Đóng'}
-            />
-
-          </>
-        }
-
-        {openningIds.size > 0 &&
-          <ButtonOutline
-            style={{
-              opacity: loadingIds.size > 0 ? '0.5' : '1',
-              pointerEvents: loadingIds.size > 0 ? 'none' : '',
-            }}
-            onClick={handleSortProfileLayout}
-            icon={<Grip />}
-            title={'Sắp xếp'}
-          />
-        }
-
         <div className="filters-button d-flex gap-10">
+          <Popover className='button-dropdown-filter-checkbox'
+            trigger={
+              <ButtonOutlineTags
+                showTagOne
+                title={resourcesFilters.name}
+                icon={<CirclePlus />}
+                className='button-outlined font-inter pointer color-white h-40 fs-13 d-flex'
+                selected={selectedResourceItems}
+                tags={
+                  <Tags
+                    selectedItems={selectedResourceItems}
+                    convert={convertResource}
+                  />
+
+                }
+              />
+            }
+            content={
+              <DropdownCheckboxMenu
+                convert={convertResource}
+                items={resourcesFilters.items}
+                selectedItems={selectedResourceItems}
+                onChangeSelectedItems={onChangeSelectedResourceItems}
+                onClearSelectedItems={onClearSelectedResourceItems}
+              />
+            }
+          />
+
           <Popover className='button-dropdown-filter-checkbox'
             trigger={
               <ButtonOutlineTags
@@ -204,11 +201,53 @@ export default function ProfileFilterSearch({
 
         </div>
 
-
       </div>
+      <div className='flex items-center gap-10'>
+        {selected.length > 0 &&
+          <>
+            <ButtonInfo
+              style={{
+                opacity: loadingIds.size > 0 ? '0.5' : '1',
+                pointerEvents: loadingIds.size > 0 ? 'none' : '',
+              }}
+              onClick={handleOpenProfiles}
+              icon={<Play />}
+              title={'Mở'}
+            />
+
+            <ButtonOrange
+              style={{
+                opacity: loadingIds.size > 0 ? '0.5' : '1',
+                pointerEvents: loadingIds.size > 0 ? 'none' : '',
+              }}
+              onClick={handleCloseProfiles}
+              icon={<Pause />}
+              title={'Đóng'}
+            />
+            {openningIds.size > 0 &&
+              <ButtonOutline
+                style={{
+                  opacity: loadingIds.size > 0 ? '0.5' : '1',
+                  pointerEvents: loadingIds.size > 0 ? 'none' : '',
+                }}
+                onClick={handleSortProfileLayout}
+                icon={<Grip />}
+                title={'Sắp xếp'}
+              />
+            }
+          </>
+        }
+      </div>
+
+
     </div>
   )
 }
+
+const resourcesFilters = {
+  name: 'Tài nguyên',
+  items: RESOURCES.map(res => res.id),
+};
 
 const statusFilters = {
   name: 'Trạng thái',

@@ -1143,6 +1143,12 @@ body {
   border-image: linear-gradient(to right, var(--red), var(--green)) 1;
 }
 
+.border-primary-2 {
+  border-width: 2px;
+  border-style: solid;
+  border-image: linear-gradient(to right, var(--red), var(--green)) 1;
+}
+
 .button-outline-primary:hover {
   background-color: var(--border);
 }
@@ -1228,14 +1234,14 @@ body {
   font-family: var(--ff) !important;
   outline: none !important;
   height: 40px;
-  box-shadow: none !important;
-  transition: none !important;
+  /* box-shadow: none !important; */
+  /* transition: none !important; */
 }
 
 .select-main:focus {
   border: 1px solid var(--focus) !important;
-  outline: none !important;
-  box-shadow: none !important;
+  /* outline: none !important; */
+  /* box-shadow: none !important; */
 }
 
 .filter-select:focus {
@@ -1525,15 +1531,15 @@ body {
   color: white !important;
   border-radius: 0rem !important;
   border: 1px solid var(--border);
-  outline: none !important;
-  box-shadow: none !important;
-  transition: none !important;
+  /* outline: none !important; */
+  /* box-shadow: none !important; */
+  /* transition: ease-in-out 0.1s !important; */
 }
 
 .custom-input:focus {
   border: 1px solid var(--focus) !important;
-  outline: none !important;
-  box-shadow: none !important;
+  /* outline: none !important; */
+  /* box-shadow: none !important; */
 }
 
 .custom-input-script::placeholder {
@@ -2473,9 +2479,9 @@ body {
   color: white !important;
   border-radius: 0rem !important;
   border: 1px solid var(--border);
-  outline: none !important;
-  box-shadow: none !important;
-  transition: none !important;
+  /* outline: none !important; */
+  /* box-shadow: none !important; */
+  /* transition: none !important; */
   color: var(--text-gray) !important;
 }
 

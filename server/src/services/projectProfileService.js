@@ -5,7 +5,8 @@ const RestApiException = require('../exceptions/RestApiException');
 const { Sequelize, QueryTypes } = require('sequelize');
 const ProjectProfile = require('../models/projectProfile');
 const sequelize = require('../configs/dbConnection');
-const { Pagination, StatusCommon } = require('../enums');
+const { Pagination, StatusCommon, WEB3_WALLET_RESOURCE_IDS } = require('../enums');
+const { convertArr } = require('../utils/convertUtil');
 
 const projectProfileSchema = Joi.object({
   project_id: Joi.string().trim().required().max(36).messages({
@@ -22,6 +23,15 @@ const projectProfileSchema = Joi.object({
   }),
 });
 
+const statusValidation = Joi.object({
+  status: Joi.required()
+    .valid(StatusCommon.UN_ACTIVE, StatusCommon.IN_ACTIVE)
+    .messages({
+      'any.only': 'Trạng thái không hợp lệ!',
+      'any.required': 'Trạng thái không được bỏ trống!',
+    }),
+});
+
 const getAllProfilesByResources = async (req) => {
 
   const {
@@ -31,6 +41,9 @@ const getAllProfilesByResources = async (req) => {
     projectId,
     selectedStatusItems,
   } = req.query;
+
+  const resourceArr = convertArr(resources);
+  // const statusArr = convertArr(selectedStatusItems);
 
   const currentPage = Number(page) || 1;
   const offset = (currentPage - 1) * Pagination.limit;
@@ -73,9 +86,9 @@ const getAllProfilesByResources = async (req) => {
     telegram: ['telegram_email', 'telegram_email_password', 'telegram_username', 'telegram_phone'],
   };
 
-  if (resources?.length > 0) {
+  if (resourceArr?.length > 0) {
 
-    for (const resource of resources) {
+    for (const resource of resourceArr) {
       const fields = ACCOUNT_FIELDS[resource];
       if (!fields) continue; // nếu resource không tồn tại trong map thì bỏ qua
       const fieldConditions = fields.map(field => `${field} <> ''`).join(' AND ');
@@ -86,6 +99,20 @@ const getAllProfilesByResources = async (req) => {
   if (conditions.length > 0) {
     whereClause += ' AND ' + conditions.join(' AND ');
   }
+
+  const w3w_resource_ids_filtered = resourceArr?.filter(res =>
+    WEB3_WALLET_RESOURCE_IDS?.includes(res));
+
+  const havingClause = w3w_resource_ids_filtered?.length > 0 ?
+    ('HAVING ' + w3w_resource_ids_filtered?.map(w =>
+      `FIND_IN_SET('${w}', web3_wallet_ids)`).join(' AND ')
+    ) : ''
+    ;
+  const havingClauseCount = w3w_resource_ids_filtered?.length > 0 ?
+    ('HAVING ' + w3w_resource_ids_filtered?.map(w =>
+      `FIND_IN_SET('${w}', GROUP_CONCAT(DISTINCT w.resource_id))`).join(' AND ')
+    ) : ''
+    ;
 
   const query = `
     SELECT 
@@ -110,11 +137,9 @@ const getAllProfilesByResources = async (req) => {
     LEFT JOIN web3_wallets w ON pw.wallet_id = w.id AND w.deletedAt IS NULL AND w.status = '${StatusCommon.IN_ACTIVE}'
     ${whereClause} 
     GROUP BY p.id 
-    ${resources?.includes('metamask') ? `HAVING FIND_IN_SET('metamask', web3_wallet_ids)` : ''}
-    ${resources?.includes('backpack') ? `HAVING FIND_IN_SET('backpack', web3_wallet_ids)` : ''}
-    ${resources?.includes('suiwallet') ? `HAVING FIND_IN_SET('suiwallet', web3_wallet_ids)` : ''}
+    ${havingClause}
     ORDER BY p.createdAt DESC
-    LIMIT ${!resources ? 0 : Pagination.limit} OFFSET ${offset}
+    LIMIT ${Pagination.limit} OFFSET ${offset}
   `;
 
   const data = await sequelize.query(query, {
@@ -131,10 +156,7 @@ const getAllProfilesByResources = async (req) => {
     LEFT JOIN web3_wallets w ON pw.wallet_id = w.id AND w.deletedAt IS NULL AND w.status = '${StatusCommon.IN_ACTIVE}'
     ${whereClause}
     GROUP BY p.id
-    ${resources?.includes('metamask') ? `HAVING FIND_IN_SET('metamask', GROUP_CONCAT(DISTINCT w.resource_id))` : ''}
-    ${resources?.includes('backpack') ? `HAVING FIND_IN_SET('backpack', GROUP_CONCAT(DISTINCT w.resource_id))` : ''}
-    ${resources?.includes('suiwallet') ? `HAVING FIND_IN_SET('suiwallet', GROUP_CONCAT(DISTINCT w.resource_id))` : ''}
-    ${!resources ? 'LIMIT 0' : ''}
+    ${havingClauseCount}
   ) AS subquery
    `;
 
@@ -147,23 +169,25 @@ const getAllProfilesByResources = async (req) => {
   const totalPages = Math.ceil(total / Pagination.limit);
 
   const dataConverted = data?.map(p => {
+    const { web3_wallet_ids, ...rest } = p;
     const accountResources = Object.entries(ACCOUNT_FIELDS)
       .filter(([_, fields]) => fields.every(field => p[field]))
       .map(([key]) => key);
 
-    const web3WalletResources = p.web3_wallet_ids
-      ? p.web3_wallet_ids.split(',')
+    const web3WalletResources = web3_wallet_ids
+      ? web3_wallet_ids.split(',')
         .map(s => s.trim())
         .filter(Boolean) // bỏ chuỗi rỗng
       : [];
 
     return {
-      ...p,
+      ...rest,
       resources: [...accountResources, ...web3WalletResources],
     };
   });
 
   const totalJoined = await countByProject(projectId);
+  const totalJoinedDisabled = await countByProjectUnActive(projectId);
   const totalFree = await countByResources(projectId, resources);
 
   return {
@@ -172,7 +196,9 @@ const getAllProfilesByResources = async (req) => {
       page: parseInt(currentPage, 10),
       totalItems: total,
       totalItemsJoined: totalJoined,
+      totalItemsJoinedDisabled: totalJoinedDisabled,
       totalItemsFree: totalFree,
+      isTabFree: true,
       totalPages,
       hasNext: currentPage < totalPages,
       hasPre: currentPage > 1
@@ -190,6 +216,7 @@ const getAllProfilesByProject = async (req) => {
     page,
     search,
     resources,
+    selectedTab,
   } = req.query;
 
   const currentPage = Number(page) || 1;
@@ -219,6 +246,7 @@ const getAllProfilesByProject = async (req) => {
   const query = `
     SELECT 
 	    pp.id,
+	    pp.status,
 		  pr.*
     FROM 
       project_profiles pp
@@ -247,7 +275,7 @@ const getAllProfilesByProject = async (req) => {
       ${whereClause}
 			GROUP BY p.id
 			) pr ON pr.profile_id = pp.profile_id
-     WHERE pp.project_id = '${projectId}'
+     WHERE pp.project_id = '${projectId}' AND pp.status = '${selectedTab === 'joined' ? StatusCommon.IN_ACTIVE : StatusCommon.UN_ACTIVE}'
      ORDER BY pp.createdAt DESC
      LIMIT ${Pagination.limit} OFFSET ${offset}
   `;
@@ -271,7 +299,7 @@ const getAllProfilesByProject = async (req) => {
       ${whereClause}
 			GROUP BY p.id
 			) pr ON pr.profile_id = pp.profile_id
-     WHERE pp.project_id = '${projectId}'
+     WHERE pp.project_id = '${projectId}' AND pp.status = '${selectedTab === 'joined' ? StatusCommon.IN_ACTIVE : StatusCommon.UN_ACTIVE}'
   ) AS subquery
    `;
 
@@ -291,23 +319,25 @@ const getAllProfilesByProject = async (req) => {
   };
 
   const dataConverted = data?.map(p => {
+    const { web3_wallet_ids, ...rest } = p;
     const accountResources = Object.entries(RESOURCE_MAP)
       .filter(([_, fields]) => fields.every(field => p[field]))
       .map(([key]) => key);
 
-    const web3WalletResources = p.web3_wallet_ids
-      ? p.web3_wallet_ids.split(',')
+    const web3WalletResources = web3_wallet_ids
+      ? web3_wallet_ids.split(',')
         .map(s => s.trim())
         .filter(Boolean) // bỏ chuỗi rỗng
       : [];
 
     return {
-      ...p,
+      ...rest,
       resources: [...accountResources, ...web3WalletResources],
     };
   });
 
   const totalJoined = await countByProject(projectId);
+  const totalJoinedDisabled = await countByProjectUnActive(projectId);
   const totalFree = await countByResources(projectId, resources);
 
   return {
@@ -317,8 +347,10 @@ const getAllProfilesByProject = async (req) => {
       page: parseInt(currentPage, 10),
       totalItems: total,
       totalItemsJoined: totalJoined,
+      totalItemsJoinedDisabled: totalJoinedDisabled,
       totalItemsFree: totalFree,
       totalPages,
+      isTabFree: false,
       hasNext: currentPage < totalPages,
       hasPre: currentPage > 1
     }
@@ -326,6 +358,7 @@ const getAllProfilesByProject = async (req) => {
 }
 
 const countByResources = async (projectId = '', resources) => {
+  const resourceArr = convertArr(resources);
 
   let whereClause = `WHERE p.deletedAt IS NULL 
       AND p.status = '${StatusCommon.IN_ACTIVE}'`;
@@ -349,8 +382,9 @@ const countByResources = async (projectId = '', resources) => {
     telegram: ['telegram_email', 'telegram_email_password', 'telegram_username', 'telegram_phone'],
   };
 
-  if (resources?.length > 0) {
-    for (const resource of resources) {
+  if (resourceArr?.length > 0) {
+
+    for (const resource of resourceArr) {
       const fields = ACCOUNT_FIELDS[resource];
       if (!fields) continue; // nếu resource không tồn tại trong map thì bỏ qua
       const fieldConditions = fields.map(field => `${field} <> ''`).join(' AND ');
@@ -362,6 +396,15 @@ const countByResources = async (projectId = '', resources) => {
     whereClause += ' AND ' + conditions.join(' AND ');
   }
 
+  const w3w_resource_ids_filtered = resourceArr?.filter(res =>
+    WEB3_WALLET_RESOURCE_IDS?.includes(res));
+
+  const havingClauseCount = w3w_resource_ids_filtered?.length > 0 ?
+    ('HAVING ' + w3w_resource_ids_filtered?.map(w =>
+      `FIND_IN_SET('${w}', GROUP_CONCAT(DISTINCT w.resource_id))`).join(' AND ')
+    ) : ''
+    ;
+
   const countQuery = `
  SELECT COUNT(*) AS total FROM (
     SELECT p.id
@@ -371,10 +414,31 @@ const countByResources = async (projectId = '', resources) => {
     LEFT JOIN web3_wallets w ON pw.wallet_id = w.id AND w.deletedAt IS NULL AND w.status = '${StatusCommon.IN_ACTIVE}'
     ${whereClause}
     GROUP BY p.id
-    ${resources?.includes('metamask') ? `HAVING FIND_IN_SET('metamask', GROUP_CONCAT(DISTINCT w.resource_id))` : ''}
-    ${resources?.includes('backpack') ? `HAVING FIND_IN_SET('backpack', GROUP_CONCAT(DISTINCT w.resource_id))` : ''}
-    ${resources?.includes('suiwallet') ? `HAVING FIND_IN_SET('suiwallet', GROUP_CONCAT(DISTINCT w.resource_id))` : ''}
-    ${!resources ? 'LIMIT 0' : ''}
+    ${havingClauseCount}
+  ) AS subquery
+   `;
+
+  const countResult = await sequelize.query(countQuery, {
+    type: QueryTypes.SELECT
+  });
+
+  const total = countResult[0]?.total;
+  return total;
+}
+
+const countByProjectUnActive = async (projectId = '') => {
+
+  let whereClause = `
+     WHERE pp.project_id = '${projectId}' AND pp.status = '${StatusCommon.UN_ACTIVE}'
+`;
+
+  const countQuery = `
+  SELECT COUNT(*) AS total FROM (
+    SELECT pp.id
+    FROM 
+      project_profiles pp
+    JOIN profiles p ON p.id = pp.profile_id AND p.deletedAt IS NULL AND p.status = '${StatusCommon.IN_ACTIVE}'
+    ${whereClause}
   ) AS subquery
    `;
 
@@ -389,7 +453,7 @@ const countByResources = async (projectId = '', resources) => {
 const countByProject = async (projectId = '') => {
 
   let whereClause = `
-    WHERE pp.project_id = '${projectId}'
+     WHERE pp.project_id = '${projectId}' AND pp.status = '${StatusCommon.IN_ACTIVE}'
 `;
 
   const countQuery = `
@@ -416,6 +480,8 @@ const getAllIdsByResources = async (req) => {
     resources,
   } = req.query;
 
+  const resourceArr = convertArr(resources);
+
   let whereClause = `WHERE p.deletedAt IS NULL 
       AND p.status = '${StatusCommon.IN_ACTIVE}'`;
 
@@ -438,8 +504,9 @@ const getAllIdsByResources = async (req) => {
     telegram: ['telegram_email', 'telegram_email_password', 'telegram_username', 'telegram_phone'],
   };
 
-  if (resources?.length > 0) {
-    for (const resource of resources) {
+  if (resourceArr?.length > 0) {
+
+    for (const resource of resourceArr) {
       const fields = ACCOUNT_FIELDS[resource];
       if (!fields) continue; // nếu resource không tồn tại trong map thì bỏ qua
       const fieldConditions = fields.map(field => `${field} <> ''`).join(' AND ');
@@ -451,6 +518,15 @@ const getAllIdsByResources = async (req) => {
     whereClause += ' AND ' + conditions.join(' AND ');
   }
 
+  const w3w_resource_ids_filtered = resourceArr?.filter(res =>
+    WEB3_WALLET_RESOURCE_IDS?.includes(res));
+
+  const havingClause = w3w_resource_ids_filtered?.length > 0 ?
+    ('HAVING ' + w3w_resource_ids_filtered?.map(w =>
+      `FIND_IN_SET('${w}', GROUP_CONCAT(DISTINCT w.resource_id))`).join(' AND ')
+    ) : ''
+    ;
+
   const countQuery = `
     SELECT p.id
     FROM 
@@ -459,10 +535,7 @@ const getAllIdsByResources = async (req) => {
     LEFT JOIN web3_wallets w ON pw.wallet_id = w.id AND w.deletedAt IS NULL AND w.status = '${StatusCommon.IN_ACTIVE}'
     ${whereClause}
     GROUP BY p.id
-    ${resources?.includes('metamask') ? `HAVING FIND_IN_SET('metamask', GROUP_CONCAT(DISTINCT w.resource_id))` : ''}
-    ${resources?.includes('backpack') ? `HAVING FIND_IN_SET('backpack', GROUP_CONCAT(DISTINCT w.resource_id))` : ''}
-    ${resources?.includes('suiwallet') ? `HAVING FIND_IN_SET('suiwallet', GROUP_CONCAT(DISTINCT w.resource_id))` : ''}
-    ${!resources ? 'LIMIT 0' : ''}
+    ${havingClause}
    `;
 
   const data = await sequelize.query(countQuery, {
@@ -470,14 +543,20 @@ const getAllIdsByResources = async (req) => {
   });
 
   const convertedData = data?.map(item => item.id);
-  console.log(convertedData)
   return convertedData;
 }
 
-const getAllIdsByProject = async (projectId = '') => {
+const getAllIdsByProject = async (req) => {
+  const {
+    projectId
+  } = req.params;
+
+  const {
+    selectedTab,
+  } = req.query;
 
   let whereClause = `
-    WHERE pp.project_id = '${projectId}'
+     WHERE pp.project_id = '${projectId}' AND pp.status = '${selectedTab === 'joined' ? StatusCommon.IN_ACTIVE : StatusCommon.UN_ACTIVE}'
 `;
 
   const query = `
@@ -549,37 +628,26 @@ const createProjectProfiles = async (body) => {
   return data;
 }
 
-// const updateProjectProfile = async (body) => {
-//   const { id, profile_id, wallet_name, wallet_id, need_check_wallet_id } = body;
-//   const data = validateProjectProfile(body);
-//
-//   if (need_check_wallet_id) {
-//
-//     const profileWalletExists = await sequelize.query(queryProjectProfileExists, {
-//       replacements: { profileId: profile_id, walletId: wallet_id }
-//     });
-//
-//     if (profileWalletExists[0].length > 0) {
-//       throw new RestApiException(`Ví Web3 ${wallet_name} đã tồn tại trong hồ sơ này!`);
-//     }
-//   }
-//
-//   const [updatedCount] = await ProfileWallet.update({
-//     ...data,
-//   }, {
-//     where: {
-//       id: id,
-//     }
-//   });
-//
-//   if (!updatedCount) {
-//     throw new NotFoundException('Không tìm thấy ví Web3 này!');
-//   }
-//
-//   const updatedProfileWallet = await ProfileWallet.findByPk(id);
-//
-//   return updatedProfileWallet;
-// }
+const updateProjectProfileStatus = async (body) => {
+  const { id } = body;
+  const data = validateStatus(body);
+
+  const [updatedCount] = await ProjectProfile.update({
+    status: data.status === StatusCommon.IN_ACTIVE ? StatusCommon.UN_ACTIVE : StatusCommon.IN_ACTIVE,
+  }, {
+    where: {
+      id: id,
+    }
+  });
+
+  if (!updatedCount) {
+    throw new NotFoundException('Không tìm thấy profile này trong dự án!');
+  }
+
+  const updated = await ProjectProfile.findByPk(id);
+
+  return updated;
+}
 
 const deleteProjectProfile = async (id) => {
   const deletedCount = await ProjectProfile.destroy({
@@ -617,6 +685,16 @@ const validateProjectProfile = (data) => {
   return value;
 };
 
+const validateStatus = (data) => {
+  const { error, value } = statusValidation.validate(data, { stripUnknown: true });
+
+  if (error) {
+    throw new ValidationException(error.details[0].message);
+  }
+
+  return value;
+};
+
 const queryProjectProfileExists = `
   SELECT pp.id FROM project_profiles pp
   WHERE pp.profile_id = :profileId
@@ -632,7 +710,7 @@ module.exports = {
   getProfileWalletById,
   createProjectProfile,
   createProjectProfiles,
-  // updateProjectProfile,
+  updateProjectProfileStatus,
   deleteProjectProfile,
   deleteProjectProfiles,
 };

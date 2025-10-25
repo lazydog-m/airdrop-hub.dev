@@ -6,8 +6,9 @@ import Popover from "@/components/Popover";
 import { ButtonGhost, ButtonOutlineTags } from '@/components/Button';
 import { Color, StatusCommon } from '@/enums/enum';
 import { Badge } from '@/components/ui/badge';
-import { convertStatusCommonEnumToColorHex, convertStatusCommonEnumToText, convertWalletStatusEnumToColorHex, convertWalletStatusEnumToText, darkenColor, lightenColor } from '@/utils/convertUtil';
+import { convertStatusCommonEnumToColorHex, convertStatusCommonEnumToText, darkenColor, lightenColor } from '@/utils/convertUtil';
 import useDebounce from '@/hooks/useDebounce';
+import InputUi from '@/components/InputUi';
 
 export default function Web3WalletFilterSearch({
   selectedStatusItems,
@@ -36,7 +37,7 @@ export default function Web3WalletFilterSearch({
   return (
     <div className="d-flex mt-20 justify-content-between align-items-center">
       <div className="filter-search d-flex gap-10">
-        <Input
+        <InputUi
           placeholder='Tìm kiếm ví web3...'
           style={{ width: '250px' }}
           className='custom-input'

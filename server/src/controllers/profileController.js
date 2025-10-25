@@ -164,7 +164,8 @@ api.get('/:id/close', async (req, res, next) => {
 
 api.get('/close-multiple', async (req, res, next) => {
   try {
-    const newOpenningIds = await closeProfilesByIds(req)
+    const { ids } = req.query;
+    const newOpenningIds = await closeProfilesByIds(ids)
     return apiRes.toJson(res, newOpenningIds);
   } catch (error) {
     next(error);

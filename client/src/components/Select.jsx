@@ -14,7 +14,6 @@ export default function Select({
   items = [],
   disabled,
   convertItem,
-  mainClassName = 'select-main',
   form = true,
   ...other
 }) {
@@ -24,7 +23,14 @@ export default function Select({
       value={value}
       {...other}
     >
-      <SelectTrigger className={`${form && 'mt-10'} select-none color-white font-inter fs-14 pointer bdr ${mainClassName}`}>
+      <SelectTrigger className={`
+      ${form && 'mt-10'} select-none color-white font-inter fs-14 pointer bdr select-main
+            transition-all duration-200 ease-in-out
+            focus-within:ring-neutral-500
+            focus-within:ring-offset-1
+            focus-visible:ring-[1px]
+            dark:focus-within:ring-offset-neutral-500
+`}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent style={{ zIndex: 99999 }} className='select-content bdr mt-1' >

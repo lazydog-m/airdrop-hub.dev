@@ -26,11 +26,6 @@ function Autocomplete({
   };
 
   const handleMouseDownInput = () => { // click vao input
-    const filtered = items.filter(item =>
-      item.toLowerCase().includes(value.toLowerCase())
-    );
-    // setFilteredSuggestions(filtered);
-    // setIsDropdownVisible(filtered.length > 0);
     setFilteredSuggestions(items);
     setIsDropdownVisible(items?.length > 0);
   };
@@ -112,7 +107,14 @@ function Autocomplete({
   return (
     <div ref={wrapperRef} style={{ position: 'relative' }}>
       <Input
-        className='mt-10 font-inter custom-input'
+        className={`
+            mt-10 font-inter custom-input
+            focus-visible:outline-none
+            focus-visible:ring-offset-1 focus-visible:ring-offset-background
+            transition-all duration-200 ease-in-out
+            focus-visible:ring-[1px]
+            dark:focus-visible:ring-offset-neutral-500
+        `}
         autoComplete='off'
         {...other}
         value={value}
@@ -121,7 +123,9 @@ function Autocomplete({
         onKeyDown={handleKeyDown}
       />
       {isDropdownVisible && filteredSuggestions.length > 0 && (
-        <ul className='autocomplete scroll' ref={dropdownRef}>
+        <ul className='
+          autocomplete scroll bdr
+          ' ref={dropdownRef}>
           {filteredSuggestions.map((suggestion, index) => (
             <li className={`autocomplete-item fw-400 d-flex justify-content-between align-items-center`}
               key={index}

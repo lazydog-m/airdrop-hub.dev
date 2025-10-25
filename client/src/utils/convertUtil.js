@@ -1,3 +1,4 @@
+import { RESOURCES } from "@/commons/Resources";
 import { Color, DailyTaskRefresh, DAILY_TASK_TEXT, ProjectCost, ProjectStatus, ProjectType, StatusCommon, TaskStatus } from "@/enums/enum";
 
 export const convertProjectStatusEnumToText = (status) => {
@@ -40,8 +41,8 @@ export const convertProjectTypeEnumToColorHex = (type) => {
   switch (type) {
     case ProjectType.WEB:
       return Color.ORANGE
-    // case ProjectType.GALXE:
-    //   return Color.SECONDARY
+    case ProjectType.GALXE:
+      return Color.SECONDARY
     case ProjectType.TESTNET:
       return Color.SUCCESS
     case ProjectType.GAME:
@@ -78,10 +79,6 @@ export const convertProjectTaskItemsToColorHex = (other) => {
       return Color.PRIMARY
     case 'CD-24':
       return Color.WARNING
-    case DAILY_TASK_TEXT:
-      return Color.SUCCESS
-    case 'Task 7h Sáng':
-      return Color.INFO
     default: return Color.SUCCESS
   }
 
@@ -108,6 +105,13 @@ export const convertStatusCommonEnumToColorHex = (status) => {
       return Color.ORANGE
     default: return null
   }
+
+}
+
+export const convertResource = (id) => {
+
+  const findRes = RESOURCES.find(res => res?.id === id);
+  return `${findRes?.title}`;
 
 }
 

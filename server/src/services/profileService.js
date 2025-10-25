@@ -5,8 +5,9 @@ const RestApiException = require('../exceptions/RestApiException');
 const { Sequelize, Op, QueryTypes } = require('sequelize');
 const Profile = require('../models/profile');
 const sequelize = require('../configs/dbConnection');
-const { Pagination, StatusCommon } = require('../enums');
+const { Pagination, StatusCommon, WEB3_WALLET_RESOURCE_IDS } = require('../enums');
 const { openProfile, browsers, currentProfiles, closingByApiIds, delay, getPortFree, usedPorts, getBrowsers, addBrowser, removeBrowserById, sortGridLayout } = require('../utils/playwrightUtil');
+const { convertArr } = require('../utils/convertUtil');
 
 const profileSchema = Joi.object({
   email: Joi.string().trim().lowercase().required().max(255).messages({
@@ -120,7 +121,15 @@ const statusValidation = Joi.object({
 
 const getAllProfiles = async (req) => {
 
-  const { page, search, selectedStatusItems } = req.query;
+  const {
+    page,
+    search,
+    selectedStatusItems,
+    selectedResourceItems
+  } = req.query;
+
+  const resourceArr = convertArr(selectedResourceItems);
+  const statusArr = convertArr(selectedStatusItems);
 
   const currentPage = Number(page) || 1;
   const offset = (currentPage - 1) * Pagination.limit;
@@ -143,18 +152,48 @@ const getAllProfiles = async (req) => {
       )
   `);
     replacements.push(...Array(8).fill(`%${search}%`));
-    // replacements.push(`%${search}%`);
   }
 
-  if (selectedStatusItems?.length > 0) {
-    const statusPlaceholders = selectedStatusItems.map((_, index) => `?`).join(',');
+  if (statusArr?.length > 0) {
+    const statusPlaceholders = statusArr.map((_, index) => `?`).join(',');
     conditions.push(`p.status IN (${statusPlaceholders})`);
-    replacements.push(...selectedStatusItems);
+    replacements.push(...statusArr);
+  }
+
+  const ACCOUNT_FIELDS = {
+    google: ['email', 'email_password'],
+    x: ['x_email', 'x_email_password', 'x_username'],
+    discord: ['discord_email', 'discord_email_password', 'discord_username', 'discord_password'],
+    telegram: ['telegram_email', 'telegram_email_password', 'telegram_username', 'telegram_phone'],
+  };
+
+  if (resourceArr?.length > 0) {
+
+    for (const resource of resourceArr) {
+      const fields = ACCOUNT_FIELDS[resource];
+      if (!fields) continue; // nếu resource không tồn tại trong map thì bỏ qua
+      const fieldConditions = fields.map(field => `${field} <> ''`).join(' AND ');
+      conditions.push(`(${fieldConditions})`);
+    }
   }
 
   if (conditions.length > 0) {
     whereClause += ' AND ' + conditions.join(' AND ');
   }
+
+  const w3w_resource_ids_filtered = resourceArr?.filter(res =>
+    WEB3_WALLET_RESOURCE_IDS?.includes(res));
+
+  const havingClause = w3w_resource_ids_filtered?.length > 0 ?
+    ('HAVING ' + w3w_resource_ids_filtered?.map(w =>
+      `FIND_IN_SET('${w}', web3_wallet_ids)`).join(' AND ')
+    ) : ''
+    ;
+  const havingClauseCount = w3w_resource_ids_filtered?.length > 0 ?
+    ('HAVING ' + w3w_resource_ids_filtered?.map(w =>
+      `FIND_IN_SET('${w}', GROUP_CONCAT(DISTINCT w.resource_id))`).join(' AND ')
+    ) : ''
+    ;
 
   const query = `
     SELECT 
@@ -180,8 +219,8 @@ const getAllProfiles = async (req) => {
     LEFT JOIN profile_web3_wallets pw ON pw.profile_id = p.id AND pw.deletedAt IS NULL
     LEFT JOIN web3_wallets w ON pw.wallet_id = w.id AND w.deletedAt IS NULL AND w.status = '${StatusCommon.IN_ACTIVE}'
     ${whereClause} 
-    GROUP BY
-      p.id
+    GROUP BY p.id
+    ${havingClause}
     ORDER BY p.createdAt DESC
     LIMIT ${Pagination.limit} OFFSET ${offset}
   `;
@@ -192,10 +231,16 @@ const getAllProfiles = async (req) => {
   });
 
   const countQuery = `
-  SELECT COUNT(*) AS total 
+ SELECT COUNT(*) AS total FROM (
+    SELECT p.id
     FROM 
       profiles p
-    ${whereClause} 
+    LEFT JOIN profile_web3_wallets pw ON pw.profile_id = p.id AND pw.deletedAt IS NULL
+    LEFT JOIN web3_wallets w ON pw.wallet_id = w.id AND w.deletedAt IS NULL AND w.status = '${StatusCommon.IN_ACTIVE}'
+    ${whereClause}
+    GROUP BY p.id
+    ${havingClauseCount}
+  ) AS subquery
    `;
 
   const countResult = await sequelize.query(countQuery, {
@@ -206,26 +251,20 @@ const getAllProfiles = async (req) => {
   const total = countResult[0]?.total;
   const totalPages = Math.ceil(total / Pagination.limit);
 
-  const RESOURCE_MAP = {
-    google: ['email', 'email_password'],
-    discord: ['discord_email', 'discord_email_password', 'discord_username', 'discord_password'],
-    x: ['x_email', 'x_email_password', 'x_username'],
-    telegram: ['telegram_email', 'telegram_email_password', 'telegram_username', 'telegram_phone'],
-  };
-
   const dataConverted = data?.map(p => {
-    const accountResources = Object.entries(RESOURCE_MAP)
+    const { web3_wallet_ids, ...rest } = p;
+    const accountResources = Object.entries(ACCOUNT_FIELDS)
       .filter(([_, fields]) => fields.every(field => p[field]))
       .map(([key]) => key);
 
-    const web3WalletResources = p.web3_wallet_ids
-      ? p.web3_wallet_ids.split(',')
+    const web3WalletResources = web3_wallet_ids
+      ? web3_wallet_ids.split(',')
         .map(s => s.trim())
         .filter(Boolean) // bỏ chuỗi rỗng
       : [];
 
     return {
-      ...p,
+      ...rest,
       accounts: accountResources,
       web3Wallets: web3WalletResources
     };
@@ -517,8 +556,7 @@ const openProfilesByIds = async (ids = []) => {
   return [];
 };
 
-const closeProfilesByIds = async (req) => {
-  const { ids } = req.query;
+const closeProfilesByIds = async (ids) => {
   //1 2 3 4      // 1 2 dang mo => lay 1,2 de dong => 3,4 chua mo ko lay
 
   const filteredIds = ids?.filter((id) => currentProfiles().includes(id));

@@ -4,8 +4,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import * as TooltipPrimitives from '@radix-ui/react-tooltip';
-import { Color } from "@/enums/enum"
 
 export default function TooltipUi({
   content,

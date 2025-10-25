@@ -18,6 +18,7 @@ export default function RHFTextarea({
   required,
   placeholder,
   height = '120px',
+  mt = 'mt-10 ',
   ...other
 }) {
 
@@ -38,7 +39,15 @@ export default function RHFTextarea({
           }
           <Textarea
             ref={textareaRef}
-            className='mt-10 font-inter custom-input'
+            className={`
+            ${mt} font-inter custom-input
+            focus-visible:outline-none
+            focus-visible:ring-offset-1 focus-visible:ring-offset-background
+            transition-all duration-200 ease-in-out
+            focus-visible:ring-[1px]
+            dark:focus-visible:ring-offset-neutral-500
+            dark:focus-visible:ring-[#d4d4d4]
+            `}
             autoComplete='off'
             placeholder={placeholder}
             onKeyDown={(e) => {
@@ -69,7 +78,6 @@ export default function RHFTextarea({
             }}
             style={{ minHeight: height, maxHeight: height }}
             {...field}
-            {...other}
           />
           <ErrorMessage message={error?.message} />
         </>

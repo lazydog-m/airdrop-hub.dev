@@ -9,7 +9,8 @@ const {
   getAllIdsByResources,
   getAllIdsByProject,
   createProjectProfiles,
-  deleteProjectProfiles
+  deleteProjectProfiles,
+  updateProjectProfileStatus
 } = require('../services/projectProfileService');
 
 // Get all profiles by resources
@@ -45,7 +46,7 @@ api.get('/ids/resources', async (req, res, next) => {
 // Get all ids by project
 api.get('/ids/:projectId', async (req, res, next) => {
   try {
-    const ids = await getAllIdsByProject(req.params.projectId);
+    const ids = await getAllIdsByProject(req);
     return apiRes.toJson(res, ids);
   } catch (error) {
     next(error);
@@ -107,6 +108,17 @@ api.post('/multiple', async (req, res, next) => {
 //   }
 // });
 //
+
+// Update status
+api.put('/status', async (req, res, next) => {
+  const { body } = req;
+  try {
+    const updatedStatus = await updateProjectProfileStatus(body);
+    return apiRes.toJson(res, updatedStatus);
+  } catch (error) {
+    next(error);
+  }
+});
 
 // Delete profiles
 api.delete('/multiple', async (req, res, next) => {

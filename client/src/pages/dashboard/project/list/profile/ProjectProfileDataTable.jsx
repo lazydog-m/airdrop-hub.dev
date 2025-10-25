@@ -19,14 +19,6 @@ import { Checkbox } from '@/components/Checkbox';
 import { ResourceIconCheck } from '@/commons/Resources';
 import { BadgePrimary, BadgePrimaryOutline } from '@/components/Badge';
 
-const columns = [
-  { header: 'Tên Profile', align: 'left' },
-  { header: 'Total Points', align: 'left' },
-  { header: 'Tài Nguyên Yêu Cầu', align: 'left' },
-  // { header: 'Trạng Thái', align: 'left' },
-  { header: '', align: 'left' },
-]
-
 const DataTableMemo = React.memo(DataTable);
 
 export default function ProjectProfileDataTable({
@@ -67,6 +59,31 @@ export default function ProjectProfileDataTable({
   const handleClose = () => {
     setOpen(false);
   };
+
+  const handleUpdateStatus = (id, status) => {
+    const body = {
+      id,
+      status,
+    };
+    putStatus(body);
+  }
+
+  const triggerPut = (data) => {
+    onSuccess(`${data?.status === StatusCommon.IN_ACTIVE ? 'Kích hoạt' : 'Vô hiệu hóa'} thành công!`);
+    swalClose();
+  }
+
+  const putStatus = async (body) => {
+    try {
+      showLoading();
+      const response = await apiPut(`/project-profiles/status`, body);
+      onUpdateData(response.data.data.id, () => triggerPut(response.data.data));
+    } catch (error) {
+      console.error(error);
+      onError(error.message);
+      swalClose();
+    }
+  }
 
   const handleJoinProject = (profile_id, profile_email) => {
     // const profileName = convertEmailToEmailUsername(profile_email);
@@ -116,6 +133,14 @@ export default function ProjectProfileDataTable({
     }
   }
 
+  const columns = [
+    { header: 'Tên Profile', align: 'left' },
+    !pagination?.isTabFree && { header: 'Total Points', align: 'left' },
+    { header: 'Tài Nguyên Yêu Cầu', align: 'left' },
+    !pagination?.isTabFree && { header: 'Trạng Thái', align: 'left' },
+    { header: '', align: 'left' },
+  ].filter(Boolean)
+
   const rows = React.useMemo(() => {
     return data.map((row) => (
       <TableRow
@@ -134,13 +159,13 @@ export default function ProjectProfileDataTable({
             {convertEmailToEmailUsername(row?.email)}
           </span>
         </TableCell>
-        {/* {row?.profile_id && */}
-        <TableCell align="left">
-          <BadgePrimaryOutline>
-            {`${row?.total_points || '0'}`}
-          </BadgePrimaryOutline>
-        </TableCell>
-        {/* } */}
+        {!pagination?.isTabFree &&
+          <TableCell align="left">
+            <BadgePrimaryOutline>
+              {`${row?.total_points || '0'}`}
+            </BadgePrimaryOutline>
+          </TableCell>
+        }
         <TableCell align="left">
           <div
             className='items-center d-flex select-none gap-10'
@@ -155,9 +180,11 @@ export default function ProjectProfileDataTable({
             }
           </div>
         </TableCell>
-        {/* <TableCell align="left"> */}
-        {/*   <SwitchStyle checked={row?.status === StatusCommon.IN_ACTIVE} onClick={() => handleUpdateWalletStatus(row?.id, row?.status)} /> */}
-        {/* </TableCell> */}
+        {!pagination?.isTabFree &&
+          <TableCell align="left">
+            <SwitchStyle checked={row?.status === StatusCommon.IN_ACTIVE} onClick={() => handleUpdateStatus(row?.id, row?.status)} />
+          </TableCell>
+        }
         <TableCell align="left">
           {row?.profile_id ?
             <ButtonIcon

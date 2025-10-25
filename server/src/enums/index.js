@@ -81,8 +81,11 @@ const TaskStatus = {
 
 const TaskType = {
   DAILY: 'daily',
-  SOCIAL: 'social',
-  SIGN: 'reg',
+  POINTS: 'points',
+  OFF_CHAIN: 'off_chain',
+  AIRDROP: 'airdrop',
+  REG: 'reg',
+  LOGIN: 'login',
 }
 
 const TaskRank = {
@@ -93,6 +96,10 @@ const TaskRank = {
 
 const TRASH_DATA_TYPE = 'TRASH_DATA_TYPE';
 const CURRENT_DATA_TYPE = 'CURRENT_DATA_TYPE';
+
+const WEB3_WALLET_RESOURCE_IDS = [
+  'metamask', 'suiwallet', 'backpack',
+]
 
 const Pagination = {
   limit: 12,
@@ -115,4 +122,5 @@ module.exports = {
   CURRENT_DATA_TYPE,
   Pagination,
   StatusCommon,
+  WEB3_WALLET_RESOURCE_IDS,
 };

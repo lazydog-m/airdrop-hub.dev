@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { convertProjectStatusEnumToColorHex, convertProjectStatusEnumToText, convertProjectTaskItemsToColorHex, convertProjectTypeEnumToColorHex, darkenColor, lightenColor } from '@/utils/convertUtil';
 import useDebounce from '@/hooks/useDebounce';
 import { RiTodoLine } from 'react-icons/ri';
+import InputUi from '@/components/InputUi';
 
 export default function ProjectFilterSearch({
   selectedStatusItems = [],
@@ -78,7 +79,7 @@ export default function ProjectFilterSearch({
   return (
     <div className="d-flex mt-20 justify-content-between align-items-center gap-20">
       <div className="filter-search d-flex gap-10">
-        <Input
+        <InputUi
           placeholder='Tìm kiếm dự án ...'
           style={{ width: '250px' }}
           className='custom-input'
@@ -142,6 +143,34 @@ export default function ProjectFilterSearch({
         <Popover className='button-dropdown-filter-checkbox'
           trigger={
             <ButtonOutlineTags
+              title={profileFilters.name}
+              icon={<CirclePlus />}
+              className='button-outlined font-inter pointer color-white h-40 fs-13 d-flex'
+              // selected={selectedStatusItems}
+              tags={
+                <Tags
+                // selectedItems={selectedStatusItems}
+                // style={convertProjectStatusEnumToColorHex}
+                // convert={convertProjectStatusEnumToText}
+                />
+
+              }
+            />
+          }
+          content={
+            <DropdownCheckboxMenu
+              // convert={convertProjectStatusEnumToText}
+              items={profileFilters.items}
+            // selectedItems={selectedStatusItems}
+            // onChangeSelectedItems={onChangeSelectedStatusItems}
+            // onClearSelectedItems={onClearSelectedStatusItems}
+            />
+          }
+        />
+
+        <Popover className='button-dropdown-filter-checkbox'
+          trigger={
+            <ButtonOutlineTags
               title={selectedTask || 'Task'}
               icon={<CirclePlus />}
               // showTagOne
@@ -198,12 +227,11 @@ const typeFilters = {
 };
 
 
-const cheatFilters = {
-  name: 'Cheating',
+const profileFilters = {
+  name: 'Profiles',
   items: [
-    'Có',
-    'Không',
-    '',
+    'Chưa Join',
+    'Chưa Reg',
   ],
 };
 

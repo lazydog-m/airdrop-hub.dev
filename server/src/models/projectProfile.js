@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const db = require('../configs/dbConnection');
+const { StatusCommon } = require('../enums');
 
 const ProjectProfile = db.define('project_profiles', {
   id: {
@@ -26,6 +27,11 @@ const ProjectProfile = db.define('project_profiles', {
       key: 'id'
     },
     allowNull: false,
+  },
+  status: {
+    type: DataTypes.ENUM,
+    values: [StatusCommon.UN_ACTIVE, StatusCommon.IN_ACTIVE],
+    defaultValue: StatusCommon.IN_ACTIVE,
   },
   // deletedAt: {
   //   type: DataTypes.DATE,

@@ -98,7 +98,9 @@ function AutocompleteTag({
             onKeyDown={handleKeyDown}
           />
           {filteredSuggestions.length > 0 &&
-            <ul className='autocomplete-tag scroll' ref={dropdownRef}>
+            <ul className='
+              autocomplete-tag scroll
+              ' ref={dropdownRef}>
               {filteredSuggestions.map((item, index) => (
                 <li className='autocomplete-tag-item fw-400 d-flex justify-content-between align-items-center'
                   key={index}
@@ -134,7 +136,9 @@ const ButtonTag = ({ tags = [], placeholder }) => {
   return (
     <div
       style={{ paddingInline: '11.5px' }}
-      className='mt-10 input-tags pointer flex select-none items-center justify-between w-full font-inter'
+      className='
+      mt-10 input-tags pointer flex select-none items-center justify-between w-full font-inter button-tag
+      '
     >
       {tags?.length > 0 ?
         <div className='items-center flex gap-6'>
