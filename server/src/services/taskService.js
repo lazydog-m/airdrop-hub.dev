@@ -96,7 +96,6 @@ const getAllTasksByProjectId = async (req) => {
   const { projectId } = req.params;
 
   await getProjectById(projectId);
-  console.log(await getProjectById(projectId) || '?')
 
   const currentPage = Number(page) || 1;
   const offset = (currentPage - 1) * 6;
